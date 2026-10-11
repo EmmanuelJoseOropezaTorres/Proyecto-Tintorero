@@ -1,0 +1,128 @@
+CREATE DATABASE IF NOT EXISTS valery_portal
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE valery_portal;
+
+CREATE TABLE IF NOT EXISTS usuarios (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(120) NOT NULL,
+  correo VARCHAR(190) NOT NULL,
+  contrasena_hash VARCHAR(255) NOT NULL,
+  fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_usuarios_correo UNIQUE (correo)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS clientes (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  cedula_rif VARCHAR(20) NOT NULL,
+  nombre_razon_social VARCHAR(180) NOT NULL,
+  telefono VARCHAR(30) NOT NULL,
+  direccion TEXT NOT NULL,
+  limite_credito DECIMAL(14, 2) NOT NULL DEFAULT 0,
+  dias_credito_otorgados INT UNSIGNED NOT NULL DEFAULT 0,
+  estado ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+  fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_clientes_cedula_rif UNIQUE (cedula_rif),
+  CONSTRAINT chk_clientes_limite_credito CHECK (limite_credito >= 0),
+  CONSTRAINT chk_clientes_dias_credito CHECK (dias_credito_otorgados <= 3650),
+  INDEX idx_clientes_activos_nombre (estado, nombre_razon_social, id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS categorias_productos (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(100) NOT NULL,
+  activa BOOLEAN NOT NULL DEFAULT TRUE,
+  fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_categorias_productos_nombre UNIQUE (nombre)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS productos (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  codigo VARCHAR(40) NOT NULL,
+  nombre VARCHAR(180) NOT NULL,
+  categoria_id BIGINT UNSIGNED NOT NULL,
+  precio_usd DECIMAL(14, 2) NOT NULL,
+  precio_bs DECIMAL(16, 2) NOT NULL,
+  tasa_cambio DECIMAL(14, 6) NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_productos_codigo UNIQUE (codigo),
+  CONSTRAINT chk_productos_precio_usd CHECK (precio_usd >= 0),
+  CONSTRAINT chk_productos_precio_bs CHECK (precio_bs >= 0),
+  CONSTRAINT chk_productos_tasa CHECK (tasa_cambio > 0),
+  CONSTRAINT fk_productos_categoria FOREIGN KEY (categoria_id)
+    REFERENCES categorias_productos(id)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
+  INDEX idx_productos_categoria_activos (categoria_id, activo, nombre)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS facturas_venta (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  cliente_id BIGINT UNSIGNED NOT NULL,
+  numero_factura VARCHAR(50) NOT NULL,
+  monto_total DECIMAL(14, 2) NOT NULL,
+  saldo_pendiente DECIMAL(14, 2) NOT NULL,
+  fecha_emision DATE NOT NULL,
+  fecha_vencimiento DATE NOT NULL,
+  estatus_pago ENUM('PENDIENTE', 'PAGADO', 'VENCIDO') NOT NULL DEFAULT 'PENDIENTE',
+  fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_actualizacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_facturas_numero UNIQUE (numero_factura),
+  CONSTRAINT chk_facturas_monto CHECK (monto_total > 0),
+  CONSTRAINT chk_facturas_saldo CHECK (saldo_pendiente >= 0 AND saldo_pendiente <= monto_total),
+  CONSTRAINT chk_facturas_fechas CHECK (fecha_vencimiento >= fecha_emision),
+  CONSTRAINT chk_facturas_estado_saldo CHECK (
+    (estatus_pago = 'PAGADO' AND saldo_pendiente = 0)
+    OR (estatus_pago IN ('PENDIENTE', 'VENCIDO') AND saldo_pendiente > 0)
+  ),
+  CONSTRAINT fk_facturas_cliente FOREIGN KEY (cliente_id)
+    REFERENCES clientes(id)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
+  INDEX idx_facturas_cliente (cliente_id),
+  INDEX idx_facturas_alertas (estatus_pago, saldo_pendiente, fecha_vencimiento)
+) ENGINE=InnoDB;
+
+INSERT INTO categorias_productos (nombre)
+VALUES ('General'), ('Alimentos'), ('Servicios')
+ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO clientes (
+  cedula_rif, nombre_razon_social, telefono, direccion, limite_credito, dias_credito_otorgados
+)
+VALUES
+  ('V-00000001', 'Cliente de prueba Uno', '+58 412 000 0001', 'Dirección de prueba, Caracas', 500.00, 30),
+  ('J-00000002', 'Cliente de prueba Dos', '+58 412 000 0002', 'Dirección de prueba, Maracay', 250.00, 15)
+ON DUPLICATE KEY UPDATE cedula_rif = VALUES(cedula_rif);
+
+INSERT INTO productos (codigo, nombre, categoria_id, precio_usd, precio_bs, tasa_cambio)
+SELECT datos.codigo, datos.nombre, categorias.id, datos.precio_usd, datos.precio_bs, datos.tasa_cambio
+FROM (
+  SELECT 'DEMO-001' AS codigo, 'Producto de prueba Uno' AS nombre, 'General' AS categoria,
+         10.00 AS precio_usd, 365.00 AS precio_bs, 36.500000 AS tasa_cambio
+  UNION ALL
+  SELECT 'DEMO-002', 'Servicio de prueba', 'Servicios', 25.00, 912.50, 36.500000
+) AS datos
+JOIN categorias_productos AS categorias ON categorias.nombre = datos.categoria
+ON DUPLICATE KEY UPDATE codigo = VALUES(codigo);
+
+INSERT INTO facturas_venta (
+  cliente_id, numero_factura, monto_total, saldo_pendiente,
+  fecha_emision, fecha_vencimiento, estatus_pago
+)
+SELECT clientes.id, datos.numero_factura, datos.monto_total, datos.saldo_pendiente,
+       CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL datos.dias_vencimiento DAY), 'PENDIENTE'
+FROM (
+  SELECT 'V-00000001' AS cedula_rif, 'DEMO-F-001' AS numero_factura,
+         100.00 AS monto_total, 100.00 AS saldo_pendiente, 7 AS dias_vencimiento
+  UNION ALL
+  SELECT 'J-00000002', 'DEMO-F-002', 50.00, 25.00, 30
+) AS datos
+JOIN clientes ON clientes.cedula_rif = datos.cedula_rif
+ON DUPLICATE KEY UPDATE numero_factura = VALUES(numero_factura);

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#17243b">
+    <meta name="description" content="Inicio de sesión del portal Valery.">
+    <title>Iniciar sesión | Valery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./auth.js" defer></script>
+  </head>
+  <body class="auth-page">
+    <main class="auth-card">
+      <a class="brand auth-brand" href="./login.html"><span class="brand-mark">V</span><span>valery <span class="brand-light">portal</span></span></a>
+      <p class="eyebrow">PORTAL DE GESTIÓN</p>
+      <h1>Iniciar sesión</h1>
+      <p class="subtitle">Accede a los módulos de clientes, productos y cuentas por cobrar.</p>
+      <form class="auth-form" data-auth-form="login" novalidate>
+        <label class="form-field">Correo electrónico
+          <input name="correo" type="email" autocomplete="email" maxlength="190" required>
+        </label>
+        <label class="form-field">Contraseña
+          <input name="contrasena" type="password" autocomplete="current-password" minlength="8" required>
+        </label>
+        <p class="auth-message" role="alert" aria-live="polite"></p>
+        <button class="button button-primary" type="submit">Entrar al portal</button>
+      </form>
+      <p class="auth-switch">¿Aún no tienes cuenta? <a href="./registro.html">Crear cuenta</a></p>
+    </main>
+  </body>
+</html>
