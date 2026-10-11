@@ -2,9 +2,9 @@
 
 ## 1. Datos y alcance
 
-Se valora el módulo académico del portal Valery con la metodología de siete pasos solicitada. Como el equipo pidió aplicar a Valery el mismo método del proyecto de café, se toman como parámetros de referencia los valores del informe de costos usado en ese proyecto: **20 horas de programación**, remuneración mensual de **USD 500**, costos operativos mensuales de **USD 35,03**, equipo de **USD 570**, jornada de **176 horas mensuales** y **2.112 horas anuales**, con desgaste/contingencia de **20 %**.
+Se valora el módulo académico del portal Valery con la metodología de siete pasos solicitada. El equipo informó un total de **20 horas de programación**. Para aplicar el mismo método del proyecto de café, se toman de ese informe como parámetros de referencia la remuneración mensual de **USD 500**, los costos operativos mensuales de **USD 35,03**, el equipo de **USD 570**, la jornada de **176 horas mensuales** y **2.112 horas anuales**, con desgaste/contingencia de **20 %**.
 
-Los importes son una valoración académica en USD, no una cotización comercial ni un registro contable. Las 20 horas pertenecen al informe de referencia y no constituyen una medición independiente del tiempo invertido en Valery. La distribución por actividad del tablero es provisional: el equipo debe reemplazarla por su bitácora real antes de presentar ambos documentos.
+Los importes son una valoración académica en USD, no una cotización comercial ni un registro contable. El total de 20 horas fue informado por el equipo y se usa para calcular el costo del proyecto. A petición del equipo, el total se distribuyó entre las cinco tarjetas del Kanban; el reparto por actividad es una asignación acordada, no una bitácora individual cronometrada.
 
 ## 2. Insumos digitales
 
@@ -72,4 +72,4 @@ Los porcentajes se aplican como margen sobre el CTC: `precio = CTC × (1 + marge
 
 ### Conciliación con el Kanban
 
-**Horas valoradas: 20 h. Horas de las tarjetas terminadas en `KANBAN.md`: 20 h.** Los cálculos se redondean a dos decimales en cada componente presentado.
+**Horas valoradas e informadas por el equipo: 20 h. Total distribuido entre las tarjetas de `KANBAN.md`: 20 h.** Los cálculos se redondean a dos decimales en cada componente presentado.
