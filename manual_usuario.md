@@ -35,4 +35,4 @@ Los registros que aparecen en pantalla se consultan a la API y a MySQL. Las inse
 | Error 404 en `/api/` | Que Apache tenga `mod_rewrite` habilitado y permita `.htaccess` (`AllowOverride All`). |
 | Error de PDO o driver | Habilita `pdo_mysql` y `mbstring` en `php.ini` y reinicia Apache. |
 | No inicia sesión | Registra primero una cuenta y revisa que la importación de `database/database.sql` haya terminado sin errores. |
-| Error en una solicitud del navegador | Abre F12 → Console y Network; comparte el mensaje y la ruta HTTP exacta. |
+| Error en una solicitud del navegador | Abre F12 → Consola y Red; comparte el mensaje y la dirección solicitada. |

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 function dispatchAuth(PDO $db, string $method, string $path): never
 {
-    if ($method === 'GET' && $path === '/auth/sesion') {
+    if ($method === 'GET' && $path === '/autenticacion/sesion') {
         if (!isset($_SESSION['usuario_id'], $_SESSION['usuario_nombre'])) {
             throw new ApiException(401, 'Inicia sesión para continuar.');
         }
@@ -15,7 +15,7 @@ function dispatchAuth(PDO $db, string $method, string $path): never
         ]);
     }
 
-    if ($method === 'POST' && $path === '/auth/registro') {
+    if ($method === 'POST' && $path === '/autenticacion/registro') {
         $data = jsonBody();
         requireFields($data, ['nombre', 'correo', 'contrasena']);
         $nombre = trim((string) $data['nombre']);
@@ -41,7 +41,7 @@ function dispatchAuth(PDO $db, string $method, string $path): never
         sendJson(201, ['data' => ['id' => $_SESSION['usuario_id'], 'nombre' => $nombre]]);
     }
 
-    if ($method === 'POST' && $path === '/auth/login') {
+    if ($method === 'POST' && $path === '/autenticacion/iniciar-sesion') {
         $data = jsonBody();
         requireFields($data, ['correo', 'contrasena']);
         $correo = mb_strtolower(trim((string) $data['correo']));
@@ -60,7 +60,7 @@ function dispatchAuth(PDO $db, string $method, string $path): never
         sendJson(200, ['data' => ['id' => $_SESSION['usuario_id'], 'nombre' => $_SESSION['usuario_nombre']]]);
     }
 
-    if ($method === 'POST' && $path === '/auth/cerrar-sesion') {
+    if ($method === 'POST' && $path === '/autenticacion/cerrar-sesion') {
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
             $parameters = session_get_cookie_params();
@@ -83,12 +83,12 @@ function dispatchAuth(PDO $db, string $method, string $path): never
 function dispatchApi(PDO $db, string $method, string $path, array $query): never
 {
     if ($method === 'GET' && $path === '/clientes') {
-        $page = positiveInteger($query['page'] ?? 1, 'page');
-        $pageSize = positiveInteger($query['page_size'] ?? 10, 'page_size');
+        $page = positiveInteger($query['pagina'] ?? 1, 'pagina');
+        $pageSize = positiveInteger($query['tamano_pagina'] ?? 10, 'tamano_pagina');
         if ($pageSize > 100) {
-            throw new ApiException(422, 'page_size no puede superar 100.');
+            throw new ApiException(422, 'El tamaño de página no puede superar 100.');
         }
-        $search = trim((string) ($query['q'] ?? ''));
+        $search = trim((string) ($query['busqueda'] ?? ''));
         if (mb_strlen($search) > 120) {
             throw new ApiException(422, 'La búsqueda no puede superar 120 caracteres.');
         }
@@ -133,16 +133,16 @@ function dispatchApi(PDO $db, string $method, string $path, array $query): never
     }
 
     if ($method === 'GET' && $path === '/productos') {
-        sendJson(200, ['data' => listProducts($db)]);
+        sendJson(200, ['data' => listarProductos($db)]);
     }
 
     if ($method === 'POST' && $path === '/productos/actualizar-precios-masivo') {
         $result = updateProductPrices($db, jsonBody());
         sendJson(200, [
             'data' => $result,
-            'message' => $result['updated_count'] === 0
+            'message' => $result['cantidad_actualizada'] === 0
                 ? 'No hay productos activos que coincidan con el alcance.'
-                : "Se actualizaron {$result['updated_count']} productos correctamente.",
+                : "Se actualizaron {$result['cantidad_actualizada']} productos correctamente.",
         ]);
     }
 

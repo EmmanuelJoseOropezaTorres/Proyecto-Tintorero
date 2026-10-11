@@ -31,12 +31,12 @@ if ($requestPath !== $apiPrefix && !str_starts_with($requestPath, $apiPrefix . '
 
 $apiPath = substr($requestPath, strlen($apiPrefix));
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
-if ($method === 'GET' && $apiPath === '/health') {
+if ($method === 'GET' && $apiPath === '/estado') {
     database()->query('SELECT 1');
-    sendJson(200, ['status' => 'ok']);
+    sendJson(200, ['estado' => 'disponible']);
 }
 
-if (str_starts_with($apiPath, '/auth/')) {
+if (str_starts_with($apiPath, '/autenticacion/')) {
     dispatchAuth(database(), $method, $apiPath);
 }
 

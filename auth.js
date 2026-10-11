@@ -20,7 +20,7 @@
     message.textContent = '';
 
     try {
-      const response = await fetch(`${API_BASE}/auth/${isRegistration ? 'registro' : 'login'}`, {
+      const response = await fetch(`${API_BASE}/autenticacion/${isRegistration ? 'registro' : 'iniciar-sesion'}`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -28,7 +28,7 @@
       });
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error?.message || `Error HTTP ${response.status}.`);
+        throw new Error(result.error?.message || `Error de comunicación (código ${response.status}).`);
       }
       window.location.replace('./index.html');
     } catch (error) {

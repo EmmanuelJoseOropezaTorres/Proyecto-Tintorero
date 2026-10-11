@@ -25,7 +25,7 @@
     saving: false,
     deletingId: null,
     savingPrices: false,
-    priceForm: { mode: 'exchange_rate', value: '', category_id: '' },
+    priceForm: { modo: 'tasa_cambio', valor: '', categoria_id: '' },
     loading: false,
     error: '',
   };
@@ -89,11 +89,11 @@
       throw new Error(
         response.status >= 500
           ? 'El servidor o la base de datos no están disponibles.'
-          : `El servidor devolvió una respuesta no válida (${response.status}).`,
+          : `El servidor devolvió una respuesta no válida (código ${response.status}).`,
       );
     }
     if (!response.ok) {
-      const error = new Error(payload.error?.message || `Error HTTP ${response.status}.`);
+      const error = new Error(payload.error?.message || `Error de comunicación (código ${response.status}).`);
       error.status = response.status;
       error.details = payload.error?.details || [];
       throw error;
@@ -103,7 +103,7 @@
 
   async function verifySession() {
     try {
-      const response = await apiRequest('/auth/sesion');
+      const response = await apiRequest('/autenticacion/sesion');
       document.querySelector('#account-name').textContent = response.data.nombre;
       loadClients();
     } catch (error) {
@@ -159,7 +159,7 @@
   function renderClients() {
     const clients = state.clientResult?.data || [];
     const pagination = state.clientResult?.pagination || {
-      page: state.page, page_size: state.pageSize, total: 0, total_pages: 0,
+      pagina: state.page, tamano_pagina: state.pageSize, total: 0, total_paginas: 0,
     };
     const clientRows = state.loading
       ? loadingRow(8, 'Cargando clientes...')
@@ -175,7 +175,7 @@
               <td class="money-cell">${formatMoney(client.limite_credito)}</td>
               <td>${escapeHtml(client.dias_credito_otorgados)} días</td>
               <td>${escapeHtml(client.estado)}</td>
-              <td>${formatDate(client.created_at)}</td>
+              <td>${formatDate(client.fecha_creacion)}</td>
               <td>${client.estado === 'ACTIVO' ? `<div class="row-actions">
                 <button class="icon-button" type="button" data-edit-client="${escapeHtml(client.id)}" aria-label="Editar ${escapeHtml(client.nombre_razon_social)}" title="Editar">✎</button>
                 <button class="icon-button danger" type="button" data-delete-client="${escapeHtml(client.id)}" ${state.deletingId === client.id ? 'disabled' : ''} aria-label="Inactivar ${escapeHtml(client.nombre_razon_social)}" title="Inactivar">⌫</button>
@@ -190,7 +190,7 @@
       ${errorBanner}
       <section class="metrics compact-metrics" aria-label="Resumen de clientes">
         ${metric('Clientes encontrados', state.loading || state.error && !state.clientResult ? '—' : pagination.total, '▦', 'purple', `Filtro: ${state.clientStatus.toLowerCase()}`)}
-        ${metric('Página actual', `${pagination.page} / ${Math.max(pagination.total_pages, 1)}`, '↕', 'blue', `${pagination.page_size} registros por página`)}
+        ${metric('Página actual', `${pagination.pagina} / ${Math.max(pagination.total_paginas, 1)}`, '↕', 'blue', `${pagination.tamano_pagina} registros por página`)}
         ${metric('Límite visible', formatMoney(visibleCredit), '$', 'green', 'Suma de la página actual')}
       </section>
       <section class="table-card">
@@ -201,11 +201,11 @@
           <tbody>${clientRows}</tbody>
         </table></div>
         <footer class="pagination">
-          <span>Mostrando ${clients.length ? (pagination.page - 1) * pagination.page_size + 1 : 0}–${Math.min(pagination.page * pagination.page_size, pagination.total)} de ${pagination.total}</span>
+          <span>Mostrando ${clients.length ? (pagination.pagina - 1) * pagination.tamano_pagina + 1 : 0}–${Math.min(pagination.pagina * pagination.tamano_pagina, pagination.total)} de ${pagination.total}</span>
           <div class="pagination-controls">
-            <button class="button button-secondary" type="button" data-page="${pagination.page - 1}" ${state.loading || pagination.page <= 1 ? 'disabled' : ''}>Anterior</button>
-            <span class="page-indicator">${pagination.page} / ${Math.max(pagination.total_pages, 1)}</span>
-            <button class="button button-secondary" type="button" data-page="${pagination.page + 1}" ${state.loading || pagination.page >= pagination.total_pages ? 'disabled' : ''}>Siguiente</button>
+            <button class="button button-secondary" type="button" data-page="${pagination.pagina - 1}" ${state.loading || pagination.pagina <= 1 ? 'disabled' : ''}>Anterior</button>
+            <span class="page-indicator">${pagination.pagina} / ${Math.max(pagination.total_paginas, 1)}</span>
+            <button class="button button-secondary" type="button" data-page="${pagination.pagina + 1}" ${state.loading || pagination.pagina >= pagination.total_paginas ? 'disabled' : ''}>Siguiente</button>
           </div>
         </footer>
       </section>`;
@@ -217,9 +217,9 @@
     renderClients();
     try {
       state.clientResult = await apiRequest(`/clientes${queryString({
-        page: state.page,
-        page_size: state.pageSize,
-        q: state.search.trim(),
+        pagina: state.page,
+        tamano_pagina: state.pageSize,
+        busqueda: state.search.trim(),
         estado: state.clientStatus,
       })}`);
     } catch (error) {
@@ -369,7 +369,7 @@
   function renderProducts() {
     const productData = state.products;
     const errorBanner = state.error ? showError(state.error) : '';
-    const visibleProducts = (productData?.products || []).filter((product) => (
+    const visibleProducts = (productData?.productos || []).filter((product) => (
       state.productCategory === '' || String(product.categoria_id) === state.productCategory
     ));
     const rows = state.loading
@@ -384,18 +384,18 @@
               <td>${escapeHtml(product.categoria)}</td><td class="money-cell">${formatMoney(product.precio_usd, 'USD')}</td>
               <td class="money-cell">${formatMoney(product.precio_bs)}</td>
               <td>${Number(product.tasa_cambio).toLocaleString('es-VE', { maximumFractionDigits: 6 })}</td>
-              <td>${formatDate(product.updated_at)}</td>
+              <td>${formatDate(product.fecha_actualizacion)}</td>
             </tr>`).join('');
-    const categories = productData?.categories || [];
+    const categories = productData?.categorias || [];
     const categoryOptions = categories.map((category) => (
-      `<option value="${escapeHtml(category.id)}" ${String(category.id) === state.priceForm.category_id ? 'selected' : ''}>${escapeHtml(category.nombre)}</option>`
+      `<option value="${escapeHtml(category.id)}" ${String(category.id) === state.priceForm.categoria_id ? 'selected' : ''}>${escapeHtml(category.nombre)}</option>`
     )).join('');
     const tableCategoryOptions = categories.map((category) => (
       `<option value="${escapeHtml(category.id)}" ${String(category.id) === state.productCategory ? 'selected' : ''}>${escapeHtml(category.nombre)}</option>`
     )).join('');
-    const priceLabel = state.priceForm.mode === 'percentage' ? 'Incremento porcentual (%)' : 'Nueva tasa (Bs por USD)';
-    const pricePlaceholder = state.priceForm.mode === 'percentage' ? 'Ej. 12.5' : 'Ej. 36.500000';
-    const modeHelp = state.priceForm.mode === 'percentage'
+    const priceLabel = state.priceForm.modo === 'porcentaje' ? 'Incremento porcentual (%)' : 'Nueva tasa (Bs por USD)';
+    const pricePlaceholder = state.priceForm.modo === 'porcentaje' ? 'Ej. 12.5' : 'Ej. 36.500000';
+    const modeHelp = state.priceForm.modo === 'porcentaje'
       ? 'El porcentaje incrementa simultáneamente los precios en USD y bolívares.'
       : 'Se conserva el precio USD y se recalcula el equivalente en bolívares.';
 
@@ -407,22 +407,22 @@
           <div class="table-heading"><div><h2>Actualizar precios</h2><p>Los productos se cargan desde la API; no hay precios de demostración.</p></div></div>
           <form class="price-form" id="price-form">
             <label class="form-field">Método de actualización
-              <select name="mode">
-                <option value="exchange_rate" ${state.priceForm.mode === 'exchange_rate' ? 'selected' : ''}>Nueva tasa de cambio (Bs/USD)</option>
-                <option value="percentage" ${state.priceForm.mode === 'percentage' ? 'selected' : ''}>Porcentaje de incremento (%)</option>
+              <select name="modo">
+                <option value="tasa_cambio" ${state.priceForm.modo === 'tasa_cambio' ? 'selected' : ''}>Nueva tasa de cambio (Bs/USD)</option>
+                <option value="porcentaje" ${state.priceForm.modo === 'porcentaje' ? 'selected' : ''}>Porcentaje de incremento (%)</option>
               </select>
             </label>
             <label class="form-field">${priceLabel}
-              <input name="value" type="number" min="0.000001" step="${state.priceForm.mode === 'percentage' ? '0.01' : '0.000001'}" max="${state.priceForm.mode === 'percentage' ? '1000' : '99999999.999999'}" value="${escapeHtml(state.priceForm.value)}" placeholder="${pricePlaceholder}" required>
+              <input name="valor" type="number" min="0.000001" step="${state.priceForm.modo === 'porcentaje' ? '0.01' : '0.000001'}" max="${state.priceForm.modo === 'porcentaje' ? '1000' : '99999999.999999'}" value="${escapeHtml(state.priceForm.valor)}" placeholder="${pricePlaceholder}" required>
             </label>
             <label class="form-field">Categoría
-              <select name="category_id"><option value="">Todos los productos activos</option>${categoryOptions}</select>
+              <select name="categoria_id"><option value="">Todos los productos activos</option>${categoryOptions}</select>
             </label>
             <div class="price-help">${modeHelp}</div>
-            <button class="button button-primary" type="submit" ${state.loading || state.savingPrices || !productData?.products.length ? 'disabled' : ''}>${state.savingPrices ? 'Actualizando...' : 'Aplicar actualización masiva'}</button>
+            <button class="button button-primary" type="submit" ${state.loading || state.savingPrices || !productData?.productos.length ? 'disabled' : ''}>${state.savingPrices ? 'Actualizando...' : 'Aplicar actualización masiva'}</button>
           </form>
         </section>
-        <article class="metric-card product-count-card"><div class="metric-top"><span>Productos activos</span><span class="metric-icon purple">▦</span></div><strong>${state.loading || state.error && !productData ? '—' : productData?.products.length || 0}</strong><small>Resultados recibidos de la API</small></article>
+        <article class="metric-card product-count-card"><div class="metric-top"><span>Productos activos</span><span class="metric-icon purple">▦</span></div><strong>${state.loading || state.error && !productData ? '—' : productData?.productos.length || 0}</strong><small>Resultados recibidos de la API</small></article>
       </div>
       <section class="table-card">
         <div class="table-heading"><div><h2>Catálogo de productos</h2><p>Precios registrados en bolívares y dólares.</p></div><label class="filter-select">Categoría<select id="product-category"><option value="">Todas</option>${tableCategoryOptions}</select></label></div>
@@ -451,23 +451,23 @@
     event.preventDefault();
     if (state.savingPrices) return;
     const form = new FormData(event.currentTarget);
-    const mode = String(form.get('mode'));
-    const value = Number(form.get('value'));
-    const categoryId = String(form.get('category_id') || '');
-    const max = mode === 'percentage' ? 1000 : 99999999.999999;
+    const mode = String(form.get('modo'));
+    const value = Number(form.get('valor'));
+    const categoryId = String(form.get('categoria_id') || '');
+    const max = mode === 'porcentaje' ? 1000 : 99999999.999999;
     if (!Number.isFinite(value) || value <= 0 || value > max) {
-      state.error = mode === 'percentage'
+      state.error = mode === 'porcentaje'
         ? 'Ingresa un incremento mayor a cero y no superior a 1000%.'
         : 'Ingresa una tasa de cambio válida mayor a cero.';
       renderProducts();
       return;
     }
-    const category = state.products?.categories.find((item) => String(item.id) === categoryId);
+    const category = state.products?.categorias.find((item) => String(item.id) === categoryId);
     const scope = category ? `la categoría «${category.nombre}»` : 'todos los productos activos';
-    const unit = mode === 'percentage' ? '%' : 'Bs/USD';
-    if (!window.confirm(`¿Aplicar ${value} ${unit} a ${scope}? Esta acción actualizará los precios en la base de datos.`)) return;
+    const unit = mode === 'porcentaje' ? '%' : 'Bs/USD';
+    if (!window.confirm(`¿Deseas aplicar ${value} ${unit} a ${scope}? La acción actualizará los precios en la base de datos.`)) return;
 
-    state.priceForm = { mode, value: String(form.get('value')), category_id: categoryId };
+    state.priceForm = { modo: mode, valor: String(form.get('valor')), categoria_id: categoryId };
     state.savingPrices = true;
     state.error = '';
     renderProducts();
@@ -475,9 +475,9 @@
       const response = await apiRequest('/productos/actualizar-precios-masivo', {
         method: 'POST',
         body: JSON.stringify({
-          mode,
-          value,
-          ...(categoryId ? { category_id: Number(categoryId) } : {}),
+          modo: mode,
+          valor: value,
+          ...(categoryId ? { categoria_id: Number(categoryId) } : {}),
         }),
       });
       showToast(response.message || 'Los precios se actualizaron correctamente.');
@@ -600,7 +600,7 @@
       return;
     }
     if (event.target.closest('[data-logout]')) {
-      apiRequest('/auth/cerrar-sesion', { method: 'POST' })
+      apiRequest('/autenticacion/cerrar-sesion', { method: 'POST' })
         .then(() => window.location.replace('./login.html'))
         .catch((error) => {
           state.error = error.message;
@@ -682,18 +682,18 @@
       state.alertDays = Number(event.target.value);
       loadReceivables();
     }
-    if (event.target.name === 'mode' && event.target.closest('#price-form')) {
-      state.priceForm.mode = event.target.value;
+    if (event.target.name === 'modo' && event.target.closest('#price-form')) {
+      state.priceForm.modo = event.target.value;
       const form = document.querySelector('#price-form');
-      state.priceForm.value = form.elements.namedItem('value').value;
-      state.priceForm.category_id = form.elements.namedItem('category_id').value;
+      state.priceForm.valor = form.elements.namedItem('valor').value;
+      state.priceForm.categoria_id = form.elements.namedItem('categoria_id').value;
       renderProducts();
     }
-    if (event.target.closest('#price-form') && event.target.name === 'category_id') {
-      state.priceForm.category_id = event.target.value;
+    if (event.target.closest('#price-form') && event.target.name === 'categoria_id') {
+      state.priceForm.categoria_id = event.target.value;
     }
-    if (event.target.closest('#price-form') && event.target.name === 'value') {
-      state.priceForm.value = event.target.value;
+    if (event.target.closest('#price-form') && event.target.name === 'valor') {
+      state.priceForm.valor = event.target.value;
     }
   });
 

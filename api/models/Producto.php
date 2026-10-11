@@ -1,36 +1,36 @@
 <?php
 declare(strict_types=1);
 
-function listProducts(PDO $db): array
+function listarProductos(PDO $db): array
 {
-    $products = $db->query(
+    $productos = $db->query(
         'SELECT p.id, p.codigo, p.nombre, p.categoria_id,
                 c.nombre AS categoria, p.precio_usd, p.precio_bs,
-                p.tasa_cambio, p.updated_at
+                p.tasa_cambio, p.fecha_actualizacion
          FROM productos p
          JOIN categorias_productos c ON c.id = p.categoria_id
          WHERE p.activo = 1
          ORDER BY c.nombre, p.nombre',
     )->fetchAll();
-    $categories = $db->query(
+    $categorias = $db->query(
         'SELECT id, nombre FROM categorias_productos
          WHERE activa = 1 ORDER BY nombre',
     )->fetchAll();
-    return ['products' => $products, 'categories' => $categories];
+    return ['productos' => $productos, 'categorias' => $categorias];
 }
 
 function updateProductPrices(PDO $db, array $payload): array
 {
-    $mode = $payload['mode'] ?? null;
-    $value = $payload['value'] ?? null;
-    $categoryId = $payload['category_id'] ?? null;
-    if (!in_array($mode, ['exchange_rate', 'percentage'], true)
+    $mode = $payload['modo'] ?? null;
+    $value = $payload['valor'] ?? null;
+    $categoryId = $payload['categoria_id'] ?? null;
+    if (!in_array($mode, ['tasa_cambio', 'porcentaje'], true)
         || !is_numeric($value)
         || !is_finite((float) $value)
         || (float) $value <= 0
-        || (float) $value > ($mode === 'percentage' ? 1000 : 99999999.999999)) {
+        || (float) $value > ($mode === 'porcentaje' ? 1000 : 99999999.999999)) {
         throw new ApiException(422, 'El método y el valor de actualización no son válidos.', [
-            ['field' => 'value', 'message' => 'Usa una tasa positiva o un incremento entre 0 y 1000%.'],
+            ['field' => 'valor', 'message' => 'Usa una tasa positiva o un incremento entre 0 y 1000%.'],
         ]);
     }
     if ($categoryId !== null && filter_var($categoryId, FILTER_VALIDATE_INT) === false) {
@@ -52,10 +52,10 @@ function updateProductPrices(PDO $db, array $payload): array
         $where = 'activo = 1';
         $parameters = ['value' => (string) $value];
         if ($categoryId !== null) {
-            $where .= ' AND categoria_id = :category_id';
-            $parameters['category_id'] = (int) $categoryId;
+            $where .= ' AND categoria_id = :categoria_id';
+            $parameters['categoria_id'] = (int) $categoryId;
         }
-        if ($mode === 'exchange_rate') {
+        if ($mode === 'tasa_cambio') {
             $sql = "UPDATE productos
                     SET tasa_cambio = :value,
                         precio_bs = ROUND(precio_usd * :value_for_price, 2)
@@ -63,11 +63,11 @@ function updateProductPrices(PDO $db, array $payload): array
             $parameters['value_for_price'] = (string) $value;
         } else {
             $sql = "UPDATE productos
-                    SET precio_usd = ROUND(precio_usd * (1 + :percentage_usd / 100), 2),
-                        precio_bs = ROUND(precio_bs * (1 + :percentage_bs / 100), 2)
+                    SET precio_usd = ROUND(precio_usd * (1 + :incremento_usd / 100), 2),
+                        precio_bs = ROUND(precio_bs * (1 + :incremento_bs / 100), 2)
                     WHERE {$where}";
-            $parameters['percentage_usd'] = (string) $value;
-            $parameters['percentage_bs'] = (string) $value;
+            $parameters['incremento_usd'] = (string) $value;
+            $parameters['incremento_bs'] = (string) $value;
         }
         $statement = $db->prepare($sql);
         $statement->execute($parameters);
@@ -75,10 +75,10 @@ function updateProductPrices(PDO $db, array $payload): array
         $db->commit();
 
         return [
-            'updated_count' => $updated,
-            'mode' => $mode,
-            'value' => (float) $value,
-            'category_id' => $categoryId === null ? null : (int) $categoryId,
+            'cantidad_actualizada' => $updated,
+            'modo' => $mode,
+            'valor' => (float) $value,
+            'categoria_id' => $categoryId === null ? null : (int) $categoryId,
         ];
     } catch (Throwable $error) {
         if ($db->inTransaction()) {

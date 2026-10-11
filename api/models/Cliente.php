@@ -22,25 +22,25 @@ function listClients(PDO $db, int $page, int $pageSize, string $search, string $
 
     $query = $db->prepare(
         "SELECT id, cedula_rif, nombre_razon_social, telefono, direccion,
-                limite_credito, dias_credito_otorgados, estado, created_at, updated_at
+                limite_credito, dias_credito_otorgados, estado, fecha_creacion, fecha_actualizacion
          FROM clientes WHERE {$where}
-         ORDER BY created_at DESC, id DESC
-         LIMIT :page_size OFFSET :offset",
+         ORDER BY fecha_creacion DESC, id DESC
+         LIMIT :tamano_pagina OFFSET :desplazamiento",
     );
     foreach ($params as $name => $value) {
         $query->bindValue(':' . $name, $value, PDO::PARAM_STR);
     }
-    $query->bindValue(':page_size', $pageSize, PDO::PARAM_INT);
-    $query->bindValue(':offset', ($page - 1) * $pageSize, PDO::PARAM_INT);
+    $query->bindValue(':tamano_pagina', $pageSize, PDO::PARAM_INT);
+    $query->bindValue(':desplazamiento', ($page - 1) * $pageSize, PDO::PARAM_INT);
     $query->execute();
 
     return [
         'data' => $query->fetchAll(),
         'pagination' => [
-            'page' => $page,
-            'page_size' => $pageSize,
+            'pagina' => $page,
+            'tamano_pagina' => $pageSize,
             'total' => $total,
-            'total_pages' => (int) ceil($total / $pageSize),
+            'total_paginas' => (int) ceil($total / $pageSize),
         ],
     ];
 }
@@ -49,7 +49,7 @@ function getClient(PDO $db, int $id): array
 {
     $query = $db->prepare(
         "SELECT id, cedula_rif, nombre_razon_social, telefono, direccion,
-                limite_credito, dias_credito_otorgados, estado, created_at, updated_at
+                limite_credito, dias_credito_otorgados, estado, fecha_creacion, fecha_actualizacion
          FROM clientes WHERE id = :id AND estado = 'ACTIVO'",
     );
     $query->execute(['id' => $id]);

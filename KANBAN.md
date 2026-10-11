@@ -1,6 +1,6 @@
 # Tablero Kanban — Valery
 
-El tablero tiene las cuatro columnas solicitadas. Las cinco tarjetas distribuyen la base de **20 horas** declarada en el informe de valoración entregado; se debe contrastar la distribución con la bitácora efectiva del equipo antes de la defensa.
+El tablero tiene las cuatro columnas solicitadas y cinco tarjetas. El informe de valoración adjunto declara **20 horas de programación**; la distribución por tarjeta que aparece abajo es una asignación referencial, no una bitácora individual verificada. Antes de entregar, sustituyan esas asignaciones por las horas reales anotadas por el equipo y mantengan el mismo total en `INFORME_COSTOS.md`. No se deben presentar horas estimadas como mediciones reales.
 
 | Por Hacer | En Progreso | En Revisión | Terminado |
 |---|---|---|---|
@@ -18,7 +18,7 @@ El tablero tiene las cuatro columnas solicitadas. Las cinco tarjetas distribuyen
 | En Progreso | 0 | 0 h |
 | En Revisión | 0 | 0 h |
 | Terminado | 5 | 20 h |
-| **Total Kanban** | **5** | **20 h** |
-| **Total en `INFORME_COSTOS.md`** |  | **20 h** |
+| **Total de referencia del tablero** | **5** | **20 h** |
+| **Total de referencia en `INFORME_COSTOS.md`** |  | **20 h** |
 
-Para convertirlo en un tablero visual en GitHub Projects, crea un proyecto enlazado a este repositorio y añade estas cinco tarjetas con los mismos títulos, estados y horas. Este archivo conserva la conciliación y el detalle dentro del repositorio.
+Este archivo documenta el tablero dentro del repositorio; no crea por sí solo un tablero visual de GitHub Projects. Para crear el tablero en GitHub, abre **Proyectos** en el repositorio, elige **Nuevo proyecto**, selecciona la vista de tablero y configura las columnas **Por Hacer**, **En Progreso**, **En Revisión** y **Terminado**. Agrega las cinco tarjetas con sus horas reales y enlaza el proyecto al repositorio.

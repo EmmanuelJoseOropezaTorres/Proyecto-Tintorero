@@ -63,24 +63,25 @@ Proyecto-Tintorero/
 
 | Método | Ruta | Uso |
 |---|---|---|
-| GET | `/api/health` | Verificar conexión a la base de datos |
-| POST | `/api/auth/registro` | Crear cuenta |
-| POST | `/api/auth/login` | Iniciar sesión |
-| GET | `/api/auth/sesion` | Consultar sesión actual |
-| POST | `/api/auth/cerrar-sesion` | Cerrar sesión |
-| GET, POST | `/api/clientes` | Listar y crear clientes |
+| GET | `/api/estado` | Verificar conexión a la base de datos |
+| POST | `/api/autenticacion/registro` | Crear cuenta |
+| POST | `/api/autenticacion/iniciar-sesion` | Iniciar sesión |
+| GET | `/api/autenticacion/sesion` | Consultar sesión actual |
+| POST | `/api/autenticacion/cerrar-sesion` | Cerrar sesión |
+| GET, POST | `/api/clientes` | Listar y crear clientes (`pagina`, `tamano_pagina`, `busqueda`, `estado`) |
 | GET, PUT, DELETE | `/api/clientes/{id}` | Consultar, editar e inactivar cliente |
 | GET | `/api/productos` | Consultar catálogo |
 | POST | `/api/productos/actualizar-precios-masivo` | Actualizar precios |
 | GET | `/api/cuentas-por-cobrar?dias=7` | Consultar saldos |
 | GET | `/api/cuentas-por-cobrar/alertas?dias=7` | Consultar alertas |
 
-## GitFlow para el equipo
+## Flujo de trabajo en Git para el equipo
 
-El trabajo se propone en `feature/<número>-<título>` y se integra mediante Pull Request a `develop`; luego se prepara otro Pull Request de `develop` a `main`. No se deben subir commits directamente a `main`. La rama `feature/101-valery-academico` contiene esta entrega y debe revisarse antes de integrarla.
+El trabajo se propone en ramas `feature/<número>-<título>` y se integra mediante solicitudes de incorporación (Pull Request) a `develop`; luego se prepara otra solicitud de `develop` a `main`. No se deben subir cambios directamente a `main`. La rama `feature/101-valery-academico` contiene esta entrega y debe revisarse antes de integrarla.
 
 ## Documentos de entrega
 
 - [Manual de usuario](./manual_usuario.md)
 - [Tablero Kanban y horas](./KANBAN.md)
 - [Informe de valoración de costos](./INFORME_COSTOS.md)
+- [Guion de demostración y plan alternativo](./GUIA_DEMOSTRACION.md)

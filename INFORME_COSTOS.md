@@ -2,9 +2,9 @@
 
 ## 1. Datos y alcance
 
-Se valora el módulo académico del portal Valery con la metodología de siete pasos solicitada. Se reutilizan como parámetros de referencia los valores del informe de costos entregado con el material del proyecto: **20 horas de desarrollo**, remuneración mensual de **USD 500**, costos operativos mensuales de **USD 35,03**, equipo de **USD 570**, jornada de **176 horas mensuales** y **2.112 horas anuales**, con desgaste/contingencia de **20 %**.
+Se valora el módulo académico del portal Valery con la metodología de siete pasos solicitada. Como el equipo pidió aplicar a Valery el mismo método del proyecto de café, se toman como parámetros de referencia los valores del informe de costos usado en ese proyecto: **20 horas de programación**, remuneración mensual de **USD 500**, costos operativos mensuales de **USD 35,03**, equipo de **USD 570**, jornada de **176 horas mensuales** y **2.112 horas anuales**, con desgaste/contingencia de **20 %**.
 
-Los importes son una valoración académica en USD, no una cotización comercial ni un registro contable. Las 20 horas son la base declarada en el informe de referencia; el tablero asigna esas horas a actividades para hacer coincidir ambos documentos. Si la bitácora real del equipo es distinta, se deben corregir simultáneamente las horas del Kanban y este informe.
+Los importes son una valoración académica en USD, no una cotización comercial ni un registro contable. Las 20 horas pertenecen al informe de referencia y no constituyen una medición independiente del tiempo invertido en Valery. La distribución por actividad del tablero es provisional: el equipo debe reemplazarla por su bitácora real antes de presentar ambos documentos.
 
 ## 2. Insumos digitales
 
@@ -12,7 +12,7 @@ Los importes son una valoración académica en USD, no una cotización comercial
 |---|---:|
 | HTML5, CSS3, JavaScript, PHP y MySQL | USD 0,00 |
 | XAMPP, VS Code, Git y GitHub | USD 0,00 |
-| Licencias de software para el alcance | USD 0,00 |
+| Licencias de programas para el alcance | USD 0,00 |
 | **Total de insumos digitales** | **USD 0,00** |
 
 Se consideran herramientas gratuitas y no se imputa un dominio ni un servicio de alojamiento. Si el equipo pagó alguno de estos insumos, debe agregarlo y recalcular el consolidado.
@@ -37,13 +37,13 @@ Mano de obra = USD 2,8409/h × 20 h = USD 56,82
 
 **Costo de mano de obra: USD 56,82.**
 
-## 5. Inversión en hardware
+## 5. Inversión en equipo informático
 
 Se aplica el divisor anual de 2.112 horas indicado por la metodología. La inversión de referencia es USD 570:
 
 ```text
-Costo de hardware por hora = USD 570 / 2.112 h = USD 0,2699/h
-Hardware imputado = USD 0,2699/h × 20 h = USD 5,40
+Costo del equipo por hora = USD 570 / 2.112 h = USD 0,2699/h
+Equipo imputado = USD 0,2699/h × 20 h = USD 5,40
 ```
 
 La vida útil de referencia del equipo es de tres años. No se vuelve a multiplicar el divisor anual por tres, para conservar el método especificado (inversión ÷ 2.112 h).
@@ -55,7 +55,7 @@ La vida útil de referencia del equipo es de tres años. No se vuelve a multipli
 | Insumos digitales | Licencias y servicios imputables | USD 0,00 |
 | Costos operativos | (35,03 ÷ 176) × 20 | USD 3,98 |
 | Mano de obra | (500 ÷ 176) × 20 | USD 56,82 |
-| Hardware | (570 ÷ 2.112) × 20 | USD 5,40 |
+| Equipo informático | (570 ÷ 2.112) × 20 | USD 5,40 |
 | **Subtotal directo** | 0,00 + 3,98 + 56,82 + 5,40 | **USD 66,20** |
 | Desgaste y contingencia | 66,20 × 20 % | USD 13,24 |
 | **CTC** | 66,20 + 13,24 | **USD 79,44** |
