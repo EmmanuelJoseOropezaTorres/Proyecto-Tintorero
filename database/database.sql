@@ -4,6 +4,16 @@ CREATE DATABASE IF NOT EXISTS valery_portal
 
 USE valery_portal;
 
+CREATE TABLE IF NOT EXISTS usuarios (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre VARCHAR(120) NOT NULL,
+  correo VARCHAR(190) NOT NULL,
+  contrasena_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT uq_usuarios_correo UNIQUE (correo)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS clientes (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   cedula_rif VARCHAR(20) NOT NULL,
@@ -82,3 +92,37 @@ CREATE TABLE IF NOT EXISTS facturas_venta (
 INSERT INTO categorias_productos (nombre)
 VALUES ('General'), ('Alimentos'), ('Servicios')
 ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
+
+INSERT INTO clientes (
+  cedula_rif, nombre_razon_social, telefono, direccion, limite_credito, dias_credito_otorgados
+)
+VALUES
+  ('V-00000001', 'Cliente de prueba Uno', '+58 412 000 0001', 'Dirección de prueba, Caracas', 500.00, 30),
+  ('J-00000002', 'Cliente de prueba Dos', '+58 412 000 0002', 'Dirección de prueba, Maracay', 250.00, 15)
+ON DUPLICATE KEY UPDATE cedula_rif = VALUES(cedula_rif);
+
+INSERT INTO productos (codigo, nombre, categoria_id, precio_usd, precio_bs, tasa_cambio)
+SELECT datos.codigo, datos.nombre, categorias.id, datos.precio_usd, datos.precio_bs, datos.tasa_cambio
+FROM (
+  SELECT 'DEMO-001' AS codigo, 'Producto de prueba Uno' AS nombre, 'General' AS categoria,
+         10.00 AS precio_usd, 365.00 AS precio_bs, 36.500000 AS tasa_cambio
+  UNION ALL
+  SELECT 'DEMO-002', 'Servicio de prueba', 'Servicios', 25.00, 912.50, 36.500000
+) AS datos
+JOIN categorias_productos AS categorias ON categorias.nombre = datos.categoria
+ON DUPLICATE KEY UPDATE codigo = VALUES(codigo);
+
+INSERT INTO facturas_venta (
+  cliente_id, numero_factura, monto_total, saldo_pendiente,
+  fecha_emision, fecha_vencimiento, estatus_pago
+)
+SELECT clientes.id, datos.numero_factura, datos.monto_total, datos.saldo_pendiente,
+       CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL datos.dias_vencimiento DAY), 'PENDIENTE'
+FROM (
+  SELECT 'V-00000001' AS cedula_rif, 'DEMO-F-001' AS numero_factura,
+         100.00 AS monto_total, 100.00 AS saldo_pendiente, 7 AS dias_vencimiento
+  UNION ALL
+  SELECT 'J-00000002', 'DEMO-F-002', 50.00, 25.00, 30
+) AS datos
+JOIN clientes ON clientes.cedula_rif = datos.cedula_rif
+ON DUPLICATE KEY UPDATE numero_factura = VALUES(numero_factura);

@@ -1,13 +1,86 @@
-# Proyecto Tintorero
+# Valery | Portal de gestión
 
-Este repositorio contiene dos proyectos independientes, cada uno en su propia carpeta:
+Aplicación académica en español para gestionar clientes, productos, precios y cuentas por cobrar. Está desarrollada con HTML5, CSS3, JavaScript vanilla, PHP puro y MySQL; no usa frameworks.
 
-- **Valery:** sitio web y API PHP en [`valery/`](./valery/).
-- **Café Hearth & Bean:** aplicación PHP y MySQL en [`cafe/`](./cafe/).
+## Requisitos
 
-## Abrir los proyectos
+- XAMPP con Apache y MySQL.
+- PHP 8.1 o superior con PDO, `pdo_mysql` y `mbstring`.
+- MySQL 8.0.16 o superior.
+- Git y un navegador moderno.
 
-- Valery: comienza por [`valery/index.html`](./valery/index.html). Para las funciones conectadas a la API, consulta [`valery/backend/README.txt`](./valery/backend/README.txt).
-- Café: comienza por [`cafe/README.md`](./cafe/README.md), donde están los requisitos y los pasos de instalación con XAMPP.
+## Instalación local en Windows
 
-Los dos proyectos se mantienen separados: cada uno conserva sus propios archivos, páginas, estilos, API y base de datos.
+1. Copia todos los archivos de este proyecto a `C:\xampp\htdocs\valery\` (o clona el repositorio directamente con ese nombre de carpeta). La carpeta debe contener `index.html`, `api\` y `database\`.
+2. Inicia **Apache** y **MySQL** desde el panel de XAMPP.
+3. Abre `http://localhost/phpmyadmin/`, selecciona **Importar** y carga `database/database.sql`. El script crea `valery_portal`, sus tablas y registros iniciales.
+4. Copia `api/.env.example` como `api/.env`. Para la configuración predeterminada de XAMPP (`root`, contraseña vacía), no es necesario cambiarla.
+5. Abre `http://localhost/valery/` y registra una cuenta para ingresar.
+
+La API queda disponible en `http://localhost/valery/api/`. Apache dirige esas rutas a `api/index.php` mediante `.htaccess`; no es necesario iniciar otro servidor ni configurar CORS para el uso local.
+
+## Estructura
+
+```text
+Proyecto-Tintorero/
+├── .gitignore
+├── README.md
+├── INFORME_COSTOS.md
+├── KANBAN.md
+├── manual_usuario.md
+├── database/
+│   ├── .htaccess
+│   └── database.sql
+├── api/
+│   ├── .htaccess
+│   ├── index.php                  # Enrutador REST
+│   ├── config/database.php        # Conexión PDO
+│   ├── controllers/
+│   ├── models/
+│   └── middlewares/
+├── index.html                     # Panel y módulos CRUD
+├── dashboard.html                 # Acceso alternativo al panel
+├── crud.html                      # Acceso al módulo de clientes
+├── login.html
+├── registro.html
+├── sistema_diseno.html
+├── styles.css
+├── app.js
+└── auth.js
+```
+
+## Funciones
+
+- Registro e inicio de sesión con contraseñas almacenadas mediante `password_hash`.
+- Gestión de clientes: consulta paginada, búsqueda, filtro de estado, creación, edición e inactivación.
+- Consulta del catálogo con filtro de categoría y actualización masiva de precios.
+- Resumen y alertas de cuentas por cobrar.
+- Respuestas de API en JSON, consultas PDO preparadas y mensajes de error en español.
+
+`index.html` contiene el panel y sus módulos; `dashboard.html` y `crud.html` son accesos alternativos al mismo panel, para evitar mantener dos copias de la interfaz.
+
+## Rutas principales de la API
+
+| Método | Ruta | Uso |
+|---|---|---|
+| GET | `/api/health` | Verificar conexión a la base de datos |
+| POST | `/api/auth/registro` | Crear cuenta |
+| POST | `/api/auth/login` | Iniciar sesión |
+| GET | `/api/auth/sesion` | Consultar sesión actual |
+| POST | `/api/auth/cerrar-sesion` | Cerrar sesión |
+| GET, POST | `/api/clientes` | Listar y crear clientes |
+| GET, PUT, DELETE | `/api/clientes/{id}` | Consultar, editar e inactivar cliente |
+| GET | `/api/productos` | Consultar catálogo |
+| POST | `/api/productos/actualizar-precios-masivo` | Actualizar precios |
+| GET | `/api/cuentas-por-cobrar?dias=7` | Consultar saldos |
+| GET | `/api/cuentas-por-cobrar/alertas?dias=7` | Consultar alertas |
+
+## GitFlow para el equipo
+
+El trabajo se propone en `feature/<número>-<título>` y se integra mediante Pull Request a `develop`; luego se prepara otro Pull Request de `develop` a `main`. No se deben subir commits directamente a `main`. La rama `feature/101-valery-academico` contiene esta entrega y debe revisarse antes de integrarla.
+
+## Documentos de entrega
+
+- [Manual de usuario](./manual_usuario.md)
+- [Tablero Kanban y horas](./KANBAN.md)
+- [Informe de valoración de costos](./INFORME_COSTOS.md)

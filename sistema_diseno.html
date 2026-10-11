@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Guía de componentes visuales del portal Valery.">
+    <title>Sistema de diseño | Valery</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="design-page">
+      <header class="design-header">
+        <div><p class="eyebrow">VALERY · ADS-433 IUJO</p><h1>Sistema de diseño</h1><p class="subtitle">Guía de referencia de la interfaz del portal de gestión.</p></div>
+        <a href="./index.html">Volver al portal</a>
+      </header>
+      <section class="design-section">
+        <h2>Identidad visual</h2>
+        <p>Paleta tomada de la aplicación; tipografía del sistema para no depender de una descarga externa.</p>
+        <div class="swatches"><div class="swatch navy">Navy · #17243B</div><div class="swatch purple">Púrpura · #6558D3</div><div class="swatch green">Éxito · #E8F8F1</div><div class="swatch gray">Fondo · #F5F7FA</div></div>
+      </section>
+      <section class="design-section">
+        <h2>Tipografía y botones</h2>
+        <p>DM Sans con alternativas Segoe UI y Arial. Jerarquía: título de página, título de sección, cuerpo y texto auxiliar.</p>
+        <div class="component-row"><button class="button button-primary" type="button">Acción principal</button><button class="button button-secondary" type="button">Acción secundaria</button></div>
+      </section>
+      <section class="design-section">
+        <h2>Formulario y validación</h2>
+        <form class="design-form">
+          <label class="form-field">Correo electrónico<input type="email" placeholder="nombre@ejemplo.com"></label>
+          <label class="form-field">Estado<select><option>Activo</option><option>Inactivo</option></select></label>
+        </form>
+      </section>
+      <section class="design-section">
+        <h2>Mensajes y estados</h2>
+        <p class="design-note" role="status">Operación completada correctamente.</p>
+        <div class="loading-state"><span class="spinner" aria-hidden="true"></span>Cargando información</div>
+        <div class="alert" role="alert"><span class="alert-symbol">!</span><span>Mensaje de error con acción para reintentar.</span></div>
+      </section>
+    </main>
+  </body>
+</html>

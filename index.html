@@ -28,8 +28,8 @@
 
       <main class="main-content">
         <header class="topbar">
-          <p class="breadcrumb">Portal <span>/</span> <strong id="breadcrumb-title">Clientes</strong></p>
-          <span class="account-chip"><span class="avatar">VC</span>Administración</span>
+          <div class="topbar-start"><button class="menu-toggle" type="button" data-menu-toggle aria-label="Abrir menú" aria-expanded="false">☰</button><p class="breadcrumb">Portal <span>/</span> <strong id="breadcrumb-title">Clientes</strong></p></div>
+          <span class="account-chip"><span class="avatar">V</span><span id="account-name">Valery</span><button class="button button-secondary" type="button" data-logout>Cerrar sesión</button></span>
         </header>
         <div id="page-content" aria-live="polite"></div>
       </main>
@@ -71,6 +71,19 @@
         <footer class="modal-actions">
           <button class="button button-secondary" type="button" data-close-dialog>Cancelar</button>
           <button class="button button-primary" type="submit" id="client-submit">Crear cliente</button>
+        </footer>
+      </form>
+    </dialog>
+    <dialog class="modal confirm-dialog" id="confirm-delete-dialog" aria-labelledby="confirm-delete-title">
+      <form method="dialog">
+        <div class="modal-heading">
+          <div><p class="eyebrow">CONFIRMAR ACCIÓN</p><h2 id="confirm-delete-title">Inactivar cliente</h2></div>
+          <button class="modal-close" type="submit" value="cancelar" aria-label="Cancelar">×</button>
+        </div>
+        <p>¿Deseas inactivar a <strong id="confirm-delete-name"></strong>? El registro se conservará para el historial.</p>
+        <footer class="modal-actions">
+          <button class="button button-secondary" type="submit" value="cancelar">Cancelar</button>
+          <button class="button button-primary" type="submit" value="confirmar">Inactivar cliente</button>
         </footer>
       </form>
     </dialog>

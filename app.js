@@ -3,7 +3,7 @@
 
   const API_BASE = window.VALERY_API_BASE
     || new URLSearchParams(window.location.search).get('api')
-    || 'http://localhost:8000/api';
+    || new URL('./api', window.location.href).toString().replace(/\/$/, '');
   const pageContent = document.querySelector('#page-content');
   const breadcrumbTitle = document.querySelector('#breadcrumb-title');
   const clientDialog = document.querySelector('#client-dialog');
@@ -15,7 +15,9 @@
     page: 1,
     pageSize: 10,
     search: '',
+    clientStatus: 'ACTIVO',
     products: null,
+    productCategory: '',
     receivables: null,
     alerts: null,
     alertDays: 7,
@@ -70,13 +72,14 @@
     try {
       response = await fetch(`${API_BASE}${path}`, {
         ...options,
+        credentials: 'same-origin',
         headers: {
           ...(options.body ? { 'Content-Type': 'application/json' } : {}),
           ...options.headers,
         },
       });
     } catch {
-      throw new Error(`No se pudo conectar con la API (${API_BASE}). Revisa el backend, el origen CORS y la configuración de conexión.`);
+      throw new Error(`No se pudo conectar con la API (${API_BASE}). Revisa Apache, MySQL y la configuración de conexión.`);
     }
 
     let payload;
@@ -96,6 +99,21 @@
       throw error;
     }
     return payload;
+  }
+
+  async function verifySession() {
+    try {
+      const response = await apiRequest('/auth/sesion');
+      document.querySelector('#account-name').textContent = response.data.nombre;
+      loadClients();
+    } catch (error) {
+      if (error.status === 401) {
+        window.location.replace('./login.html');
+        return;
+      }
+      state.error = error.message;
+      renderClients();
+    }
   }
 
   function showToast(message) {
@@ -144,11 +162,11 @@
       page: state.page, page_size: state.pageSize, total: 0, total_pages: 0,
     };
     const clientRows = state.loading
-      ? loadingRow(7, 'Cargando clientes...')
+      ? loadingRow(8, 'Cargando clientes...')
       : state.error && !state.clientResult
-        ? emptyRow(7, 'No se pudieron cargar los clientes', 'Revisa la conexión con el servidor y vuelve a intentarlo.')
+        ? emptyRow(8, 'No se pudieron cargar los clientes', 'Revisa la conexión con el servidor y vuelve a intentarlo.')
         : clients.length === 0
-          ? emptyRow(7, 'No hay clientes activos', 'Registra un cliente o cambia el término de búsqueda.')
+          ? emptyRow(8, 'No hay clientes para este filtro', 'Registra un cliente o cambia la búsqueda y el estado.')
           : clients.map((client) => `
             <tr>
               <td><div class="client-cell"><span class="client-avatar">${escapeHtml(client.nombre_razon_social.slice(0, 2).toUpperCase())}</span><span><strong>${escapeHtml(client.nombre_razon_social)}</strong><small>${escapeHtml(client.direccion)}</small></span></div></td>
@@ -156,11 +174,12 @@
               <td>${escapeHtml(client.telefono)}</td>
               <td class="money-cell">${formatMoney(client.limite_credito)}</td>
               <td>${escapeHtml(client.dias_credito_otorgados)} días</td>
+              <td>${escapeHtml(client.estado)}</td>
               <td>${formatDate(client.created_at)}</td>
-              <td><div class="row-actions">
+              <td>${client.estado === 'ACTIVO' ? `<div class="row-actions">
                 <button class="icon-button" type="button" data-edit-client="${escapeHtml(client.id)}" aria-label="Editar ${escapeHtml(client.nombre_razon_social)}" title="Editar">✎</button>
                 <button class="icon-button danger" type="button" data-delete-client="${escapeHtml(client.id)}" ${state.deletingId === client.id ? 'disabled' : ''} aria-label="Inactivar ${escapeHtml(client.nombre_razon_social)}" title="Inactivar">⌫</button>
-              </div></td>
+              </div>` : '—'}</td>
             </tr>`).join('');
     const visibleCredit = clients.reduce((total, client) => total + Number(client.limite_credito || 0), 0);
     const errorBanner = state.error ? showError(state.error) : '';
@@ -170,15 +189,15 @@
         '<button class="button button-primary" type="button" data-new-client><span>＋</span> Nuevo cliente</button>')}
       ${errorBanner}
       <section class="metrics compact-metrics" aria-label="Resumen de clientes">
-        ${metric('Clientes activos', state.loading || state.error && !state.clientResult ? '—' : pagination.total, '▦', 'purple', 'Registros activos de la API')}
+        ${metric('Clientes encontrados', state.loading || state.error && !state.clientResult ? '—' : pagination.total, '▦', 'purple', `Filtro: ${state.clientStatus.toLowerCase()}`)}
         ${metric('Página actual', `${pagination.page} / ${Math.max(pagination.total_pages, 1)}`, '↕', 'blue', `${pagination.page_size} registros por página`)}
         ${metric('Límite visible', formatMoney(visibleCredit), '$', 'green', 'Suma de la página actual')}
       </section>
       <section class="table-card">
         <div class="table-heading"><div><h2>Directorio de clientes</h2><p>Buscar, editar y cambiar el estado de los registros.</p></div><span class="record-count">${pagination.total} registros</span></div>
-        <div class="filters"><label class="search-box"><span>⌕</span><input id="client-search" value="${escapeHtml(state.search)}" placeholder="Buscar por cédula/RIF o razón social..." aria-label="Buscar clientes">${state.search ? '<button type="button" data-clear-search aria-label="Limpiar búsqueda">×</button>' : ''}</label></div>
+        <div class="filters"><label class="search-box"><span>⌕</span><input id="client-search" value="${escapeHtml(state.search)}" placeholder="Buscar por cédula/RIF o razón social..." aria-label="Buscar clientes">${state.search ? '<button type="button" data-clear-search aria-label="Limpiar búsqueda">×</button>' : ''}</label><label class="filter-select">Estado<select id="client-status"><option value="ACTIVO" ${state.clientStatus === 'ACTIVO' ? 'selected' : ''}>Activos</option><option value="INACTIVO" ${state.clientStatus === 'INACTIVO' ? 'selected' : ''}>Inactivos</option><option value="TODOS" ${state.clientStatus === 'TODOS' ? 'selected' : ''}>Todos</option></select></label></div>
         <div class="table-wrap"><table>
-          <thead><tr><th>CLIENTE</th><th>CÉDULA / RIF</th><th>TELÉFONO</th><th>LÍMITE CRÉDITO</th><th>DÍAS CRÉDITO</th><th>REGISTRO</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+          <thead><tr><th>CLIENTE</th><th>CÉDULA / RIF</th><th>TELÉFONO</th><th>LÍMITE CRÉDITO</th><th>DÍAS CRÉDITO</th><th>ESTADO</th><th>REGISTRO</th><th><span class="sr-only">Acciones</span></th></tr></thead>
           <tbody>${clientRows}</tbody>
         </table></div>
         <footer class="pagination">
@@ -201,6 +220,7 @@
         page: state.page,
         page_size: state.pageSize,
         q: state.search.trim(),
+        estado: state.clientStatus,
       })}`);
     } catch (error) {
       state.error = error.message;
@@ -320,7 +340,17 @@
 
   async function deleteClient(id) {
     const client = state.clientResult?.data.find((record) => String(record.id) === String(id));
-    if (!client || !window.confirm(`¿Inactivar al cliente ${client.nombre_razon_social}?`)) return;
+    if (!client) return;
+    const confirmationDialog = document.querySelector('#confirm-delete-dialog');
+    confirmationDialog.returnValue = 'cancelar';
+    document.querySelector('#confirm-delete-name').textContent = client.nombre_razon_social;
+    confirmationDialog.showModal();
+    const confirmed = await new Promise((resolve) => {
+      confirmationDialog.addEventListener('close', () => {
+        resolve(confirmationDialog.returnValue === 'confirmar');
+      }, { once: true });
+    });
+    if (!confirmed) return;
     state.deletingId = client.id;
     renderClients();
     try {
@@ -339,13 +369,16 @@
   function renderProducts() {
     const productData = state.products;
     const errorBanner = state.error ? showError(state.error) : '';
+    const visibleProducts = (productData?.products || []).filter((product) => (
+      state.productCategory === '' || String(product.categoria_id) === state.productCategory
+    ));
     const rows = state.loading
       ? loadingRow(7, 'Cargando productos...')
       : state.error && !productData
         ? emptyRow(7, 'No se pudo cargar el catálogo', 'Revisa la conexión y vuelve a intentarlo.')
-        : !productData?.products.length
-          ? emptyRow(7, 'No hay productos activos', 'Los productos se consultan desde la base de datos mediante la API.')
-          : productData.products.map((product) => `
+        : !visibleProducts.length
+          ? emptyRow(7, 'No hay productos para esta categoría', 'Cambia el filtro o revisa los productos registrados en la base de datos.')
+          : visibleProducts.map((product) => `
             <tr>
               <td class="rif-cell">${escapeHtml(product.codigo)}</td><td class="product-name">${escapeHtml(product.nombre)}</td>
               <td>${escapeHtml(product.categoria)}</td><td class="money-cell">${formatMoney(product.precio_usd, 'USD')}</td>
@@ -356,6 +389,9 @@
     const categories = productData?.categories || [];
     const categoryOptions = categories.map((category) => (
       `<option value="${escapeHtml(category.id)}" ${String(category.id) === state.priceForm.category_id ? 'selected' : ''}>${escapeHtml(category.nombre)}</option>`
+    )).join('');
+    const tableCategoryOptions = categories.map((category) => (
+      `<option value="${escapeHtml(category.id)}" ${String(category.id) === state.productCategory ? 'selected' : ''}>${escapeHtml(category.nombre)}</option>`
     )).join('');
     const priceLabel = state.priceForm.mode === 'percentage' ? 'Incremento porcentual (%)' : 'Nueva tasa (Bs por USD)';
     const pricePlaceholder = state.priceForm.mode === 'percentage' ? 'Ej. 12.5' : 'Ej. 36.500000';
@@ -389,7 +425,7 @@
         <article class="metric-card product-count-card"><div class="metric-top"><span>Productos activos</span><span class="metric-icon purple">▦</span></div><strong>${state.loading || state.error && !productData ? '—' : productData?.products.length || 0}</strong><small>Resultados recibidos de la API</small></article>
       </div>
       <section class="table-card">
-        <div class="table-heading"><div><h2>Catálogo de productos</h2><p>Precios registrados en bolívares y dólares.</p></div></div>
+        <div class="table-heading"><div><h2>Catálogo de productos</h2><p>Precios registrados en bolívares y dólares.</p></div><label class="filter-select">Categoría<select id="product-category"><option value="">Todas</option>${tableCategoryOptions}</select></label></div>
         <div class="table-wrap"><table>
           <thead><tr><th>CÓDIGO</th><th>PRODUCTO</th><th>CATEGORÍA</th><th>PRECIO USD</th><th>PRECIO BS</th><th>TASA BS/USD</th><th>ACTUALIZADO</th></tr></thead>
           <tbody>${rows}</tbody>
@@ -555,8 +591,29 @@
   }
 
   document.addEventListener('click', (event) => {
+    const menuToggle = event.target.closest('[data-menu-toggle]');
+    if (menuToggle) {
+      const sidebar = document.querySelector('.sidebar');
+      const expanded = sidebar.classList.toggle('is-open');
+      menuToggle.setAttribute('aria-expanded', String(expanded));
+      menuToggle.setAttribute('aria-label', expanded ? 'Cerrar menú' : 'Abrir menú');
+      return;
+    }
+    if (event.target.closest('[data-logout]')) {
+      apiRequest('/auth/cerrar-sesion', { method: 'POST' })
+        .then(() => window.location.replace('./login.html'))
+        .catch((error) => {
+          state.error = error.message;
+          render();
+        });
+      return;
+    }
     const viewButton = event.target.closest('[data-view]');
     if (viewButton) {
+      document.querySelector('.sidebar').classList.remove('is-open');
+      const menuButton = document.querySelector('[data-menu-toggle]');
+      menuButton.setAttribute('aria-expanded', 'false');
+      menuButton.setAttribute('aria-label', 'Abrir menú');
       state.view = viewButton.dataset.view;
       state.loading = false;
       state.error = '';
@@ -612,6 +669,15 @@
   });
 
   pageContent.addEventListener('change', (event) => {
+    if (event.target.id === 'client-status') {
+      state.clientStatus = event.target.value;
+      state.page = 1;
+      loadClients();
+    }
+    if (event.target.id === 'product-category') {
+      state.productCategory = event.target.value;
+      renderProducts();
+    }
     if (event.target.id === 'alert-days') {
       state.alertDays = Number(event.target.value);
       loadReceivables();
@@ -647,5 +713,5 @@
   });
 
   render();
-  loadClients();
+  verifySession();
 })();

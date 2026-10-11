@@ -1,16 +1,20 @@
 <?php
 declare(strict_types=1);
 
-function listClients(PDO $db, int $page, int $pageSize, string $search): array
+function listClients(PDO $db, int $page, int $pageSize, string $search, string $status): array
 {
-    $conditions = ["estado = 'ACTIVO'"];
+    $conditions = [];
     $params = [];
+    if ($status !== 'TODOS') {
+        $conditions[] = 'estado = :estado';
+        $params['estado'] = $status;
+    }
     if ($search !== '') {
         $conditions[] = '(cedula_rif LIKE :rif_search OR nombre_razon_social LIKE :name_search)';
         $params['rif_search'] = '%' . $search . '%';
         $params['name_search'] = '%' . $search . '%';
     }
-    $where = implode(' AND ', $conditions);
+    $where = $conditions === [] ? '1 = 1' : implode(' AND ', $conditions);
 
     $count = $db->prepare("SELECT COUNT(*) FROM clientes WHERE {$where}");
     $count->execute($params);

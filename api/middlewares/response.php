@@ -117,7 +117,7 @@ function errorHandler(Throwable $error): never
     if ($error instanceof PDOException) {
         $driverCode = (int) ($error->errorInfo[1] ?? 0);
         if ($driverCode === 1062) {
-            sendJson(409, ['error' => ['message' => 'Ya existe un registro con esa cédula, código o número de factura.']]);
+            sendJson(409, ['error' => ['message' => 'Ya existe un registro con ese correo, cédula, código o número de factura.']]);
         }
         if ($driverCode === 1451 || $driverCode === 1452) {
             sendJson(422, ['error' => ['message' => 'La referencia indicada no existe o no puede modificarse.']]);
