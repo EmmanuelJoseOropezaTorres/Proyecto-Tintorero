@@ -83,5 +83,6 @@ El trabajo se propone en ramas `feature/<número>-<título>` y se integra median
 
 - [Manual de usuario](./manual_usuario.md)
 - [Tablero Kanban y horas](./KANBAN.md)
+- [Tablero Kanban público en GitHub](https://github.com/users/Nonils0/projects/2)
 - [Informe de valoración de costos](./INFORME_COSTOS.md)
 - [Guion de demostración y plan alternativo](./GUIA_DEMOSTRACION.md)
