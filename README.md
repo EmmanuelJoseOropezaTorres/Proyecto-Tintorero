@@ -1,13 +1,94 @@
-# Proyecto Tintorero
+# Valery | Portal de gestión
 
-Este repositorio contiene dos proyectos independientes, cada uno en su propia carpeta:
+Aplicación en español para gestionar clientes, productos, precios y cuentas por cobrar, con una herramienta interactiva de análisis estadístico. Está desarrollada con HTML5, CSS3, JavaScript vanilla, PHP puro y MySQL; no usa frameworks.
 
-- **Valery:** sitio web y API PHP en [`valery/`](./valery/).
-- **Café Hearth & Bean:** aplicación PHP y MySQL en [`cafe/`](./cafe/).
+## Requisitos
 
-## Abrir los proyectos
+- XAMPP con Apache y MySQL.
+- PHP 8.1 o superior con PDO, `pdo_mysql` y `mbstring`.
+- MySQL 8.0.16 o superior.
+- Git y un navegador moderno.
 
-- Valery: comienza por [`valery/index.html`](./valery/index.html). Para las funciones conectadas a la API, consulta [`valery/backend/README.txt`](./valery/backend/README.txt).
-- Café: comienza por [`cafe/README.md`](./cafe/README.md), donde están los requisitos y los pasos de instalación con XAMPP.
+## Instalación local en Windows
 
-Los dos proyectos se mantienen separados: cada uno conserva sus propios archivos, páginas, estilos, API y base de datos.
+1. Copia todos los archivos de este proyecto a `C:\xampp\htdocs\valery\` (o clona el repositorio directamente con ese nombre de carpeta). La carpeta debe contener `index.html`, `api\` y `database\`.
+2. Inicia **Apache** y **MySQL** desde el panel de XAMPP.
+3. Abre `http://localhost/phpmyadmin/`, selecciona **Importar** y carga `database/database.sql`. El script crea `valery_portal`, sus tablas y registros iniciales.
+4. Si ya existe una instalación y aún no tiene la tabla de recordatorios, ejecuta `database/migrations/20261020_recordatorios_pago.sql` sobre `valery_portal`.
+5. En instalaciones nuevas o existentes, ejecuta `database/migrations/20261021_datos_demostracion_estadistica.sql` para mostrar datos de prueba en los gráficos.
+6. Copia `api/.env.example` como `api/.env`. Para la configuración predeterminada de XAMPP (`root`, contraseña vacía), no es necesario cambiarla.
+7. Abre `http://localhost/valery/` y registra una cuenta para ingresar.
+
+La migración de demostración es idempotente y agrega facturas pagadas, pagos fechados y recordatorios sintéticos para que el gráfico de Estadística tenga ejemplos de pagos puntuales, pagos tras una llamada y pagos tardíos. Estas filas usan nombres "Cliente de prueba" y números "DEMO-*"; no son transacciones reales.
+
+La API queda disponible en `http://localhost/valery/api/`. Apache dirige esas rutas a `api/index.php` mediante `.htaccess`; no es necesario iniciar otro servidor ni configurar CORS para el uso local.
+
+## Estructura
+
+```text
+Proyecto-Tintorero/
+├── .gitignore
+├── README.md
+├── INFORME_COSTOS.md
+├── KANBAN.md
+├── manual_usuario.md
+├── database/
+│   ├── .htaccess
+│   └── database.sql
+├── api/
+│   ├── .htaccess
+│   ├── index.php                  # Enrutador REST
+│   ├── config/database.php        # Conexión PDO
+│   ├── controllers/
+│   ├── models/
+│   └── middlewares/
+├── index.html                     # Panel y módulos CRUD
+├── dashboard.html                 # Acceso alternativo al panel
+├── crud.html                      # Acceso al módulo de clientes
+├── login.html
+├── registro.html
+├── sistema_diseno.html
+├── styles.css
+├── app.js
+└── auth.js
+```
+
+## Funciones
+
+- Registro e inicio de sesión con contraseñas almacenadas mediante `password_hash`.
+- Gestión de clientes: consulta paginada, búsqueda, filtro de estado, creación, edición e inactivación.
+- Consulta del catálogo con filtro de categoría y actualización masiva de precios.
+- Resumen y alertas de cuentas por cobrar.
+- Herramienta de Estadística para calcular medidas descriptivas, crear histogramas y tablas de frecuencia, y analizar correlación de Pearson y regresión lineal con datos propios.
+- Análisis de comportamiento de pago conectado a facturas, vencimientos, abonos y llamadas de recordatorio; la probabilidad se calcula con el historial observado.
+- Respuestas de API en JSON, consultas PDO preparadas y mensajes de error en español.
+
+`index.html` contiene el panel y sus módulos, incluida la herramienta interactiva de Estadística; `dashboard.html` y `crud.html` son accesos alternativos al mismo panel, para evitar mantener dos copias de la interfaz.
+
+## Rutas principales de la API
+
+| Método | Ruta | Uso |
+|---|---|---|
+| GET | `/api/estado` | Verificar conexión a la base de datos |
+| POST | `/api/autenticacion/registro` | Crear cuenta |
+| POST | `/api/autenticacion/iniciar-sesion` | Iniciar sesión |
+| GET | `/api/autenticacion/sesion` | Consultar sesión actual |
+| POST | `/api/autenticacion/cerrar-sesion` | Cerrar sesión |
+| GET, POST | `/api/clientes` | Listar y crear clientes (`pagina`, `tamano_pagina`, `busqueda`, `estado`) |
+| GET, PUT, DELETE | `/api/clientes/{id}` | Consultar, editar e inactivar cliente |
+| GET | `/api/productos` | Consultar catálogo |
+| POST | `/api/productos/actualizar-precios-masivo` | Actualizar precios |
+| GET | `/api/cuentas-por-cobrar?dias=7` | Consultar saldos |
+| GET | `/api/cuentas-por-cobrar/alertas?dias=7` | Consultar alertas |
+
+## Flujo de trabajo en Git para el equipo
+
+El trabajo se propone en ramas `feature/<número>-<título>` y se integra mediante solicitudes de incorporación (Pull Request) a `develop`; luego se prepara otra solicitud de `develop` a `main`. No se deben subir cambios directamente a `main`. La rama `feature/101-valery-academico` contiene esta entrega y debe revisarse antes de integrarla.
+
+## Documentos de entrega
+
+- [Manual de usuario](./manual_usuario.md)
+- [Tablero Kanban y horas](./KANBAN.md)
+- [Tablero Kanban público en GitHub](https://github.com/users/Nonils0/projects/2)
+- [Informe de valoración de costos](./INFORME_COSTOS.md)
+- [Guion de demostración y plan alternativo](./GUIA_DEMOSTRACION.md)

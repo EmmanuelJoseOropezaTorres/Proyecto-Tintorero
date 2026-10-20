@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#17243b">
+    <meta name="description" content="Registro de una cuenta del portal Valery.">
+    <title>Crear cuenta | Valery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./auth.js" defer></script>
+  </head>
+  <body class="auth-page">
+    <main class="auth-card">
+      <a class="brand auth-brand" href="./login.html"><span class="brand-mark">V</span><span>valery <span class="brand-light">portal</span></span></a>
+      <p class="eyebrow">NUEVO USUARIO</p>
+      <h1>Crear cuenta</h1>
+      <p class="subtitle">Completa los datos para ingresar al portal de gestión.</p>
+      <form class="auth-form" data-auth-form="registro" novalidate>
+        <label class="form-field">Nombre
+          <input name="nombre" autocomplete="name" minlength="2" maxlength="120" required>
+        </label>
+        <label class="form-field">Correo electrónico
+          <input name="correo" type="email" autocomplete="email" maxlength="190" required>
+        </label>
+        <label class="form-field">Contraseña
+          <input name="contrasena" type="password" autocomplete="new-password" minlength="8" maxlength="200" required>
+          <small>Debe contener al menos 8 caracteres.</small>
+        </label>
+        <p class="auth-message" role="alert" aria-live="polite"></p>
+        <button class="button button-primary" type="submit">Crear cuenta</button>
+      </form>
+      <p class="auth-switch">¿Ya tienes cuenta? <a href="./login.html">Iniciar sesión</a></p>
+    </main>
+  </body>
+</html>
