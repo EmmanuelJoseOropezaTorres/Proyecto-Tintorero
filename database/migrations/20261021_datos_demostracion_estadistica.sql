@@ -75,5 +75,18 @@ WHERE d.dias_llamada_respecto_vencimiento IS NOT NULL
     SELECT 1 FROM recordatorios_pago existing WHERE existing.factura_id = f.id
   );
 
+INSERT INTO recordatorios_pago (factura_id, fecha_recordatorio)
+SELECT f.id, DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY)
+FROM facturas_venta f
+JOIN clientes c ON c.id = f.cliente_id
+WHERE f.numero_factura = 'DEMO-F-001'
+  AND c.cedula_rif = 'V-00000001'
+  AND c.nombre_razon_social LIKE 'Cliente de prueba%'
+  AND f.saldo_pendiente > 0
+  AND f.estatus_pago IN ('PENDIENTE', 'VENCIDO')
+  AND NOT EXISTS (
+    SELECT 1 FROM recordatorios_pago existing WHERE existing.factura_id = f.id
+  );
+
 COMMIT;
 DROP TEMPORARY TABLE historial_pago_demo;
