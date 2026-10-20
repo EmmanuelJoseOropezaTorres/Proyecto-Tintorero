@@ -147,13 +147,54 @@
     document.querySelectorAll('[data-view]').forEach((button) => {
       button.classList.toggle('active', button.dataset.view === state.view);
     });
-    breadcrumbTitle.textContent = state.view === 'precios'
-      ? 'Ajustes de precios'
-      : state.view === 'deudas' ? 'Cuentas por cobrar' : 'Clientes';
+    const viewTitles = {
+      clientes: 'Clientes',
+      precios: 'Ajustes de precios',
+      deudas: 'Cuentas por cobrar',
+      estadistica: 'Estadística aplicada',
+    };
+    breadcrumbTitle.textContent = viewTitles[state.view] || 'Clientes';
 
     if (state.view === 'clientes') renderClients();
     if (state.view === 'precios') renderProducts();
     if (state.view === 'deudas') renderReceivables();
+    if (state.view === 'estadistica') renderStatistics();
+  }
+
+  function renderStatistics() {
+    pageContent.innerHTML = `
+      ${pageHeading('FORMACIÓN · PROGRAMA DE LA MATERIA', 'Estadística aplicada', 'Herramientas para analizar datos y comunicar conclusiones útiles.')}
+      <section class="statistics-intro" aria-label="Propósito de la materia">
+        <span class="metric-icon purple">↗</span>
+        <div><h2>¿Qué aprenderás?</h2><p>Organizar, resumir e interpretar datos para reconocer patrones y sustentar decisiones con evidencia.</p></div>
+      </section>
+      <section class="statistics-grid" aria-label="Contenidos de la materia">
+        <article class="statistics-card">
+          <span class="statistics-number">01</span>
+          <h2>Presentación de resultados</h2>
+          <p>Organiza la información en tablas y selecciona gráficos adecuados para comunicar los resultados con claridad.</p>
+        </article>
+        <article class="statistics-card">
+          <span class="statistics-number">02</span>
+          <h2>Medidas descriptivas</h2>
+          <p>Calcula e interpreta media, mediana, desviación estándar y percentiles para describir conjuntos de datos.</p>
+        </article>
+        <article class="statistics-card">
+          <span class="statistics-number">03</span>
+          <h2>Correlación y regresión</h2>
+          <p>Explora relaciones entre variables mediante correlación y regresión lineal básica, distinguiendo asociación de causalidad.</p>
+        </article>
+        <article class="statistics-card">
+          <span class="statistics-number">04</span>
+          <h2>Herramientas digitales</h2>
+          <p>Utiliza Excel, Google Sheets u otro programa disponible para organizar datos, realizar cálculos y crear gráficos.</p>
+        </article>
+      </section>
+      <section class="statistics-practice">
+        <p class="eyebrow">ACTIVIDAD PRÁCTICA</p>
+        <h2>Del dato a la decisión</h2>
+        <p>Analiza un conjunto de datos relacionado con tu área —por ejemplo, ventas, producción o resultados de una encuesta—. Presenta tablas y gráficos, calcula medidas descriptivas, explora relaciones entre variables y comunica una conclusión con una recomendación sustentada en los datos.</p>
+      </section>`;
   }
 
   function renderClients() {
