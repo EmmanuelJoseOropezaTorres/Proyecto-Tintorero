@@ -28,6 +28,10 @@
     priceForm: { modo: 'tasa_cambio', valor: '', categoria_id: '' },
     loading: false,
     error: '',
+    statistics: {
+      x: '1 2 3 4 5 6 7 8',
+      y: '52 55 61 65 68 72 75 81',
+    },
   };
 
   let searchTimer;
@@ -151,7 +155,7 @@
       clientes: 'Clientes',
       precios: 'Ajustes de precios',
       deudas: 'Cuentas por cobrar',
-      estadistica: 'Estadística aplicada',
+      estadistica: 'Estadística',
     };
     breadcrumbTitle.textContent = viewTitles[state.view] || 'Clientes';
 
@@ -162,39 +166,158 @@
   }
 
   function renderStatistics() {
+    let results = '';
+    let error = '';
+    try {
+      results = renderStatisticsResults(state.statistics.x, state.statistics.y);
+    } catch (analysisError) {
+      error = `<p class="statistics-error" role="alert">${escapeHtml(analysisError.message)}</p>`;
+    }
     pageContent.innerHTML = `
-      ${pageHeading('FORMACIÓN · PROGRAMA DE LA MATERIA', 'Estadística aplicada', 'Herramientas para analizar datos y comunicar conclusiones útiles.')}
-      <section class="statistics-intro" aria-label="Propósito de la materia">
-        <span class="metric-icon purple">↗</span>
-        <div><h2>¿Qué aprenderás?</h2><p>Organizar, resumir e interpretar datos para reconocer patrones y sustentar decisiones con evidencia.</p></div>
-      </section>
-      <section class="statistics-grid" aria-label="Contenidos de la materia">
-        <article class="statistics-card">
-          <span class="statistics-number">01</span>
-          <h2>Presentación de resultados</h2>
-          <p>Organiza la información en tablas y selecciona gráficos adecuados para comunicar los resultados con claridad.</p>
-        </article>
-        <article class="statistics-card">
-          <span class="statistics-number">02</span>
-          <h2>Medidas descriptivas</h2>
-          <p>Calcula e interpreta media, mediana, desviación estándar y percentiles para describir conjuntos de datos.</p>
-        </article>
-        <article class="statistics-card">
-          <span class="statistics-number">03</span>
-          <h2>Correlación y regresión</h2>
-          <p>Explora relaciones entre variables mediante correlación y regresión lineal básica, distinguiendo asociación de causalidad.</p>
-        </article>
-        <article class="statistics-card">
-          <span class="statistics-number">04</span>
-          <h2>Herramientas digitales</h2>
-          <p>Utiliza Excel, Google Sheets u otro programa disponible para organizar datos, realizar cálculos y crear gráficos.</p>
-        </article>
-      </section>
-      <section class="statistics-practice">
-        <p class="eyebrow">ACTIVIDAD PRÁCTICA</p>
-        <h2>Del dato a la decisión</h2>
-        <p>Analiza un conjunto de datos relacionado con tu área —por ejemplo, ventas, producción o resultados de una encuesta—. Presenta tablas y gráficos, calcula medidas descriptivas, explora relaciones entre variables y comunica una conclusión con una recomendación sustentada en los datos.</p>
-      </section>`;
+      ${pageHeading('ANÁLISIS DE DATOS', 'Estadística', 'Pega tus datos para calcular medidas, crear una distribución y explorar la relación entre dos variables.')}
+      <form class="statistics-input-card" id="statistics-form">
+        <div class="statistics-input-heading"><div><h2>Conjunto de datos</h2><p>Separa los valores con espacios, comas, punto y coma o saltos de línea. Usa punto para decimales.</p></div><button class="button button-secondary" type="button" data-statistics-example>Cargar ejemplo</button></div>
+        <div class="statistics-inputs">
+          <label class="form-field">Variable X
+            <textarea name="statistics_x" rows="4" placeholder="Ej.: 1, 2, 3, 4, 5" required>${escapeHtml(state.statistics.x)}</textarea>
+            <small>Dato principal; se usa para la distribución.</small>
+          </label>
+          <label class="form-field">Variable Y (opcional)
+            <textarea name="statistics_y" rows="4" placeholder="Ej.: 52, 55, 61, 65, 68">${escapeHtml(state.statistics.y)}</textarea>
+            <small>Ingresa la misma cantidad de valores para calcular correlación y regresión.</small>
+          </label>
+        </div>
+        <div class="statistics-actions"><span>Admite hasta 500 observaciones por variable.</span><button class="button button-primary" type="submit">Calcular estadísticas</button></div>
+      </form>
+      ${error}
+      ${results}`;
+  }
+
+  function parseStatisticsValues(input, label) {
+    const tokens = input.trim().split(/[\s,;]+/).filter(Boolean);
+    if (!tokens.length) throw new Error(`Ingresa al menos un valor para ${label}.`);
+    if (tokens.length > 500) throw new Error(`${label} admite un máximo de 500 valores.`);
+    const values = tokens.map(Number);
+    if (values.some((value) => !Number.isFinite(value))) {
+      throw new Error(`Revisa ${label}: todos los datos deben ser números válidos.`);
+    }
+    return values;
+  }
+
+  function summarizeStatistics(values) {
+    const sorted = [...values].sort((a, b) => a - b);
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const quantile = (probability) => {
+      const position = (sorted.length - 1) * probability;
+      const lower = Math.floor(position);
+      const fraction = position - lower;
+      return sorted[lower] + (sorted[Math.min(lower + 1, sorted.length - 1)] - sorted[lower]) * fraction;
+    };
+    const variance = values.length > 1
+      ? values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1)
+      : null;
+    return {
+      values,
+      count: values.length,
+      mean,
+      median: quantile(0.5),
+      standardDeviation: variance === null ? null : Math.sqrt(variance),
+      q1: quantile(0.25),
+      q3: quantile(0.75),
+      min: sorted[0],
+      max: sorted[sorted.length - 1],
+    };
+  }
+
+  function statisticsNumber(value) {
+    return value === null
+      ? 'No disponible'
+      : new Intl.NumberFormat('es-VE', { maximumFractionDigits: 2 }).format(value);
+  }
+
+  function renderStatisticsSummary(summary, label) {
+    const measures = [
+      ['Observaciones', summary.count],
+      ['Media', statisticsNumber(summary.mean)],
+      ['Mediana', statisticsNumber(summary.median)],
+      ['Desviación estándar muestral', statisticsNumber(summary.standardDeviation)],
+      ['Percentil 25 (Q1)', statisticsNumber(summary.q1)],
+      ['Percentil 75 (Q3)', statisticsNumber(summary.q3)],
+      ['Mínimo', statisticsNumber(summary.min)],
+      ['Máximo', statisticsNumber(summary.max)],
+    ];
+    return `<section class="statistics-result-card"><h2>Resumen de ${label}</h2><dl class="statistics-measures">${measures.map(([name, value]) => `<div><dt>${name}</dt><dd>${value}</dd></div>`).join('')}</dl></section>`;
+  }
+
+  function renderStatisticsDistribution(summary) {
+    const binCount = Math.min(12, Math.max(1, Math.ceil(1 + 3.322 * Math.log10(summary.count))));
+    const range = summary.max - summary.min;
+    const width = range === 0 ? 1 : range / binCount;
+    const bins = Array.from({ length: binCount }, (_, index) => ({
+      start: summary.min + index * width,
+      end: index === binCount - 1 ? summary.max : summary.min + (index + 1) * width,
+      count: 0,
+    }));
+    summary.values.forEach((value) => {
+      const index = range === 0 ? 0 : Math.min(binCount - 1, Math.floor((value - summary.min) / width));
+      bins[index].count += 1;
+    });
+    const maxCount = Math.max(...bins.map((bin) => bin.count), 1);
+    const chart = bins.map((bin, index) => {
+      const barWidth = 560 / binCount - 8;
+      const x = 48 + index * (560 / binCount) + 4;
+      const height = (bin.count / maxCount) * 150;
+      const y = 190 - height;
+      return `<rect x="${x}" y="${y}" width="${barWidth}" height="${height}" rx="3"><title>${statisticsNumber(bin.start)}–${statisticsNumber(bin.end)}: ${bin.count}</title></rect><text x="${x + barWidth / 2}" y="210" text-anchor="middle">${statisticsNumber(bin.start)}</text>`;
+    }).join('');
+    const tableRows = bins.map((bin) => `<tr><td>${statisticsNumber(bin.start)} – ${statisticsNumber(bin.end)}</td><td>${bin.count}</td><td>${statisticsNumber(bin.count / summary.count * 100)} %</td></tr>`).join('');
+    return `<section class="statistics-result-card"><h2>Distribución de Variable X</h2><p class="statistics-note">Histograma y tabla de frecuencias agrupadas.</p><div class="statistics-chart-wrap"><svg class="statistics-chart" viewBox="0 0 640 235" role="img" aria-label="Histograma de la variable X"><line x1="44" y1="190" x2="610" y2="190"></line><line x1="44" y1="28" x2="44" y2="190"></line>${chart}<text x="320" y="232" text-anchor="middle">Intervalos de valores</text></svg></div><div class="table-wrap"><table><thead><tr><th>Intervalo</th><th>Frecuencia</th><th>Porcentaje</th></tr></thead><tbody>${tableRows}</tbody></table></div></section>`;
+  }
+
+  function renderStatisticsRelationship(xValues, yValues) {
+    if (!yValues.length) {
+      return '<section class="statistics-result-card"><h2>Relación entre variables</h2><p class="statistics-note">Agrega valores en Variable Y para calcular correlación y regresión lineal.</p></section>';
+    }
+    if (xValues.length !== yValues.length) {
+      throw new Error('Variable X y Variable Y deben tener la misma cantidad de valores.');
+    }
+    const xMean = xValues.reduce((sum, value) => sum + value, 0) / xValues.length;
+    const yMean = yValues.reduce((sum, value) => sum + value, 0) / yValues.length;
+    const xVariance = xValues.reduce((sum, value) => sum + (value - xMean) ** 2, 0);
+    const yVariance = yValues.reduce((sum, value) => sum + (value - yMean) ** 2, 0);
+    if (xVariance === 0 || yVariance === 0) {
+      return '<section class="statistics-result-card"><h2>Relación entre variables</h2><p class="statistics-note">No se puede calcular la correlación: ambas variables deben tener variación.</p></section>';
+    }
+    const covariance = xValues.reduce((sum, value, index) => sum + (value - xMean) * (yValues[index] - yMean), 0);
+    const correlation = covariance / Math.sqrt(xVariance * yVariance);
+    const slope = covariance / xVariance;
+    const intercept = yMean - slope * xMean;
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+    const xPad = (maxX - minX || 1) * 0.08;
+    const yPad = (maxY - minY || 1) * 0.12;
+    const x0 = minX - xPad;
+    const x1 = maxX + xPad;
+    const y0 = minY - yPad;
+    const y1 = maxY + yPad;
+    const px = (value) => 48 + (value - x0) / (x1 - x0) * 550;
+    const py = (value) => 205 - (value - y0) / (y1 - y0) * 175;
+    const points = xValues.map((x, index) => `<circle cx="${px(x)}" cy="${py(yValues[index])}" r="4"><title>X: ${statisticsNumber(x)}, Y: ${statisticsNumber(yValues[index])}</title></circle>`).join('');
+    const line = `<line class="statistics-regression-line" x1="${px(minX)}" y1="${py(slope * minX + intercept)}" x2="${px(maxX)}" y2="${py(slope * maxX + intercept)}"></line>`;
+    return `<section class="statistics-result-card"><h2>Correlación y regresión lineal</h2><p class="statistics-note">Cada par de valores en la misma posición se considera una observación.</p><div class="statistics-chart-wrap"><svg class="statistics-chart statistics-scatter" viewBox="0 0 640 235" role="img" aria-label="Diagrama de dispersión y línea de regresión"><line x1="44" y1="205" x2="610" y2="205"></line><line x1="44" y1="25" x2="44" y2="205"></line>${line}${points}<text x="320" y="232" text-anchor="middle">Variable X</text><text x="15" y="18">Variable Y</text></svg></div><dl class="statistics-regression"><div><dt>Correlación de Pearson (r)</dt><dd>${statisticsNumber(correlation)}</dd></div><div><dt>Coeficiente de determinación (R²)</dt><dd>${statisticsNumber(correlation ** 2)}</dd></div><div><dt>Recta estimada</dt><dd>Y = ${statisticsNumber(slope)} × X ${intercept < 0 ? '−' : '+'} ${statisticsNumber(Math.abs(intercept))}</dd></div></dl><p class="statistics-caution">La correlación indica asociación, no demuestra que una variable cause la otra.</p></section>`;
+  }
+
+  function renderStatisticsResults(xInput, yInput) {
+    const xValues = parseStatisticsValues(xInput, 'Variable X');
+    const yValues = yInput.trim() ? parseStatisticsValues(yInput, 'Variable Y') : [];
+    if (yValues.length && yValues.length !== xValues.length) {
+      throw new Error('Variable X y Variable Y deben tener la misma cantidad de valores.');
+    }
+    const xSummary = summarizeStatistics(xValues);
+    const ySummary = yValues.length ? summarizeStatistics(yValues) : null;
+    return `<div class="statistics-results"><section class="statistics-summaries">${renderStatisticsSummary(xSummary, 'Variable X')}${ySummary ? renderStatisticsSummary(ySummary, 'Variable Y') : ''}</section>${renderStatisticsDistribution(xSummary)}${renderStatisticsRelationship(xValues, yValues)}</div>`;
   }
 
   function renderClients() {
@@ -664,6 +787,12 @@
       if (state.view === 'deudas' && !state.receivables) loadReceivables();
       return;
     }
+    if (event.target.closest('[data-statistics-example]')) {
+      state.statistics.x = '1 2 3 4 5 6 7 8';
+      state.statistics.y = '52 55 61 65 68 72 75 81';
+      renderStatistics();
+      return;
+    }
     if (event.target.closest('[data-new-client]')) {
       openNewClient();
       return;
@@ -739,6 +868,12 @@
   });
 
   pageContent.addEventListener('submit', (event) => {
+    if (event.target.id === 'statistics-form') {
+      event.preventDefault();
+      state.statistics.x = event.target.elements.namedItem('statistics_x').value;
+      state.statistics.y = event.target.elements.namedItem('statistics_y').value;
+      renderStatistics();
+    }
     if (event.target.id === 'price-form') submitPrices(event);
   });
   clientForm.addEventListener('submit', submitClient);

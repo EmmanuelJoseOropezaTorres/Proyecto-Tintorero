@@ -121,15 +121,32 @@ td { height: 59px; padding: 8px 11px; border-top: 1px solid #f0f2f5; color: #596
 .price-help { padding: 10px; border-radius: 6px; color: #6e6a9f; background: #f6f5ff; font-size: 9px; line-height: 1.5; }
 .product-count-card { align-self: start; }
 .product-count-card > strong { margin-top: 19px; font-size: 27px; }
-.statistics-intro { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; padding: 18px; border: 1px solid #e9e7fb; border-radius: 10px; background: #fbfaff; }
-.statistics-intro .metric-icon { flex: 0 0 32px; width: 32px; height: 32px; font-size: 15px; }
-.statistics-intro h2, .statistics-card h2, .statistics-practice h2 { margin: 0 0 7px; color: #263148; font-size: 13px; }
-.statistics-intro p, .statistics-card p, .statistics-practice > p:last-child { margin: 0; color: #737d8f; font-size: 10px; line-height: 1.7; }
-.statistics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-bottom: 16px; }
-.statistics-card { position: relative; min-height: 150px; padding: 20px; border: 1px solid #eaedf2; border-radius: 10px; background: #fff; box-shadow: 0 2px 8px #25365207; }
-.statistics-number { display: inline-grid; width: 27px; height: 27px; place-items: center; margin-bottom: 16px; border-radius: 8px; color: #695bd7; background: #f0eeff; font-size: 9px; font-weight: 700; }
-.statistics-practice { padding: 20px; border: 1px solid #e6eee9; border-radius: 10px; background: #f8fcfa; }
-.statistics-practice .eyebrow { margin-bottom: 8px; }
+.statistics-input-card, .statistics-result-card { margin-bottom: 15px; padding: 18px; border: 1px solid #eaedf2; border-radius: 10px; background: #fff; box-shadow: 0 2px 8px #25365207; }
+.statistics-input-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 15px; }
+.statistics-input-heading h2, .statistics-result-card h2 { margin: 0 0 5px; color: #263148; font-size: 13px; }
+.statistics-input-heading p, .statistics-inputs small, .statistics-note, .statistics-actions > span { margin: 0; color: #8992a1; font-size: 10px; line-height: 1.6; }
+.statistics-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.statistics-inputs textarea { min-height: 100px; font-family: Consolas, monospace; font-size: 12px; line-height: 1.6; }
+.statistics-inputs small { font-weight: 400; }
+.statistics-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 15px; }
+.statistics-results { display: grid; gap: 15px; }
+.statistics-summaries { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; }
+.statistics-result-card { min-width: 0; margin: 0; }
+.statistics-measures, .statistics-regression { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 13px 0 0; }
+.statistics-measures > div, .statistics-regression > div { min-width: 0; padding: 10px; border-radius: 7px; background: #f7f8fb; }
+.statistics-measures dt, .statistics-regression dt { color: #818b9b; font-size: 9px; line-height: 1.4; }
+.statistics-measures dd, .statistics-regression dd { overflow-wrap: anywhere; margin: 5px 0 0; color: #263148; font-size: 13px; font-weight: 700; }
+.statistics-chart-wrap { overflow-x: auto; margin: 10px 0; }
+.statistics-chart { display: block; width: 100%; min-width: 440px; height: auto; }
+.statistics-chart line { stroke: #cfd5df; stroke-width: 1.5; }
+.statistics-chart rect { fill: #7569e5; }
+.statistics-chart circle { fill: #6558d3; stroke: #fff; stroke-width: 1.5; }
+.statistics-chart text { fill: #737d8f; font-family: inherit; font-size: 10px; }
+.statistics-chart .statistics-regression-line { stroke: #d87955; stroke-dasharray: 6 4; stroke-width: 2.5; }
+.statistics-result-card table { white-space: normal; }
+.statistics-result-card th, .statistics-result-card td { height: auto; padding: 9px 11px; font-size: 10px; }
+.statistics-caution { margin: 12px 0 0; color: #8c6729; font-size: 10px; line-height: 1.6; }
+.statistics-error { margin: 0 0 15px; padding: 12px 14px; border: 1px solid #f5d5cf; border-radius: 7px; color: #a64e3f; background: #fff6f4; font-size: 11px; }
 .product-name { color: #374257; font-weight: 600; }
 .days-filter { display: flex; align-items: center; gap: 7px; color: #778194; font-size: 9px; white-space: nowrap; }
 .days-filter select { min-height: 33px; padding: 0 22px 0 8px; border: 1px solid #e6e9ef; border-radius: 6px; color: #596376; background: #fff; font: inherit; }
@@ -181,7 +198,7 @@ td { height: 59px; padding: 8px 11px; border-top: 1px solid #f0f2f5; color: #596
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .compact-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .price-layout { grid-template-columns: 1fr; }
-  .statistics-grid { grid-template-columns: 1fr 1fr; }
+  .statistics-inputs { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {
@@ -195,6 +212,7 @@ td { height: 59px; padding: 8px 11px; border-top: 1px solid #f0f2f5; color: #596
   .main-nav .nav-link .nav-icon { flex: 0 0 18px; font-size: 17px; }
   .sidebar-note { width: auto; justify-content: flex-start; padding: 13px 9px; }
   .main-content { margin-left: 0; padding: 0 13px 32px; }
+  .statistics-inputs { grid-template-columns: 1fr; }
   .menu-toggle { display: inline-grid; place-items: center; }
   .topbar { height: 58px; }
   .account-chip { font-size: 10px; }
@@ -207,8 +225,9 @@ td { height: 59px; padding: 8px 11px; border-top: 1px solid #f0f2f5; color: #596
   .metrics { gap: 8px; }
   .compact-metrics { grid-template-columns: 1fr 1fr; }
   .compact-metrics .metric-card:last-child { grid-column: 1 / -1; }
-  .statistics-grid { grid-template-columns: 1fr; }
-  .statistics-card { min-height: auto; }
+  .statistics-input-heading, .statistics-actions { align-items: stretch; flex-direction: column; }
+  .statistics-actions .button { width: 100%; }
+  .statistics-measures, .statistics-regression { grid-template-columns: 1fr 1fr; }
   .metric-card { padding: 11px; }
   .metric-top { font-size: 8px; }
   .metric-card > strong { font-size: 18px; }

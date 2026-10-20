@@ -23,7 +23,7 @@ Las contraseñas se guardan en la base de datos como hashes; no se almacenan en 
 - **Clientes:** busca por cédula/RIF o razón social, filtra por estado, recorre páginas y crea, edita o inactiva registros. Inactivar conserva el historial de facturas.
 - **Ajustes de precios:** consulta los productos y recalcula los precios activos usando una tasa de cambio o un porcentaje. Puedes limitar la operación a una categoría.
 - **Cuentas por cobrar:** revisa saldos pendientes, facturas vencidas y próximas a vencer; ajusta los días de anticipación.
-- **Estadística aplicada:** consulta el programa de la materia, con contenidos de tablas y gráficos, medidas descriptivas, correlación y regresión lineal básica, herramientas digitales y una actividad práctica para interpretar datos y comunicar conclusiones.
+- **Estadística:** pega datos numéricos para obtener medidas descriptivas, un histograma y una tabla de frecuencias; agrega una segunda variable para calcular correlación de Pearson y regresión lineal. El análisis acepta hasta 500 observaciones y ofrece un ejemplo listo para probar.
 
 Los registros que aparecen en pantalla se consultan a la API y a MySQL. Las inserciones incluidas en `database/database.sql` son datos iniciales para probar el sistema; no son arreglos estáticos del frontend.
 

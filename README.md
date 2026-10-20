@@ -1,6 +1,6 @@
 # Valery | Portal de gestión
 
-Aplicación en español para gestionar clientes, productos, precios y cuentas por cobrar, con un apartado informativo para el programa de Estadística Aplicada. Está desarrollada con HTML5, CSS3, JavaScript vanilla, PHP puro y MySQL; no usa frameworks.
+Aplicación en español para gestionar clientes, productos, precios y cuentas por cobrar, con una herramienta interactiva de análisis estadístico. Está desarrollada con HTML5, CSS3, JavaScript vanilla, PHP puro y MySQL; no usa frameworks.
 
 ## Requisitos
 
@@ -55,10 +55,10 @@ Proyecto-Tintorero/
 - Gestión de clientes: consulta paginada, búsqueda, filtro de estado, creación, edición e inactivación.
 - Consulta del catálogo con filtro de categoría y actualización masiva de precios.
 - Resumen y alertas de cuentas por cobrar.
-- Apartado de Estadística Aplicada con contenidos de presentación de resultados, medidas descriptivas, correlación y regresión lineal básica, herramientas digitales y actividad práctica.
+- Herramienta de Estadística para calcular medidas descriptivas, crear histogramas y tablas de frecuencia, y analizar correlación de Pearson y regresión lineal con datos propios.
 - Respuestas de API en JSON, consultas PDO preparadas y mensajes de error en español.
 
-`index.html` contiene el panel y sus módulos, incluido el apartado informativo de Estadística Aplicada; `dashboard.html` y `crud.html` son accesos alternativos al mismo panel, para evitar mantener dos copias de la interfaz.
+`index.html` contiene el panel y sus módulos, incluida la herramienta interactiva de Estadística; `dashboard.html` y `crud.html` son accesos alternativos al mismo panel, para evitar mantener dos copias de la interfaz.
 
 ## Rutas principales de la API
 
