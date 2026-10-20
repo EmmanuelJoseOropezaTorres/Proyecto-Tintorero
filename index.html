@@ -78,6 +78,23 @@
         </footer>
       </form>
     </dialog>
+    <dialog class="modal payment-modal" id="payment-dialog" aria-labelledby="payment-dialog-title">
+      <form id="payment-form" novalidate>
+        <header class="modal-heading">
+          <div><p class="eyebrow">REGISTRO DE PAGO</p><h2 id="payment-dialog-title">Abonar a factura</h2></div>
+          <button class="modal-close" type="button" data-close-payment aria-label="Cerrar">×</button>
+        </header>
+        <p id="payment-invoice-summary" class="payment-summary"></p>
+        <label class="form-field">Monto del abono (VES)
+          <input name="monto" type="number" min="0.01" step="0.01" required>
+        </label>
+        <p class="form-error" id="payment-form-error" role="alert"></p>
+        <footer class="modal-actions">
+          <button class="button button-secondary" type="button" data-close-payment>Cancelar</button>
+          <button class="button button-primary" type="submit" id="payment-submit">Registrar abono</button>
+        </footer>
+      </form>
+    </dialog>
     <dialog class="modal confirm-dialog" id="confirm-delete-dialog" aria-labelledby="confirm-delete-title">
       <form method="dialog">
         <div class="modal-heading">

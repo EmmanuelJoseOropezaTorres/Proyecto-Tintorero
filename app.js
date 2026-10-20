@@ -8,6 +8,8 @@
   const breadcrumbTitle = document.querySelector('#breadcrumb-title');
   const clientDialog = document.querySelector('#client-dialog');
   const clientForm = document.querySelector('#client-form');
+  const paymentDialog = document.querySelector('#payment-dialog');
+  const paymentForm = document.querySelector('#payment-form');
   const toastElement = document.querySelector('#toast');
 
   const state = {
@@ -32,6 +34,11 @@
       x: '1 2 3 4 5 6 7 8',
       y: '52 55 61 65 68 72 75 81',
     },
+    paymentBehavior: null,
+    statisticsLoading: false,
+    statisticsError: '',
+    recordingReminder: null,
+    payingInvoice: null,
   };
 
   let searchTimer;
@@ -166,6 +173,145 @@
   }
 
   function renderStatistics() {
+    const data = state.paymentBehavior;
+    const summary = data?.summary;
+    const clients = data?.clients || [];
+    const openInvoices = clients.flatMap((client) => client.facturas_pendientes.map((invoice) => ({ ...invoice, nombre_razon_social: client.nombre_razon_social, cedula_rif: client.cedula_rif })));
+    const classifications = [
+      ['Pagó a tiempo, sin llamada', summary?.pagadas_a_tiempo || 0, 'on-time'],
+      ['Pagó después de llamada', summary?.pagadas_despues_recordatorio || 0, 'reminded'],
+      ['Pagó tarde, sin llamada', summary?.pagadas_tarde_sin_recordatorio || 0, 'late'],
+    ];
+    const classifiedPayments = classifications.reduce((total, [, count]) => total + count, 0);
+    const historyChart = classifiedPayments
+      ? `<div class="behavior-chart" role="img" aria-label="Distribución de ${classifiedPayments} facturas pagadas"><div class="behavior-chart-bar">${classifications.map(([label, count, color]) => `<span class="behavior-chart-segment ${color}" style="width:${count / classifiedPayments * 100}%" title="${escapeHtml(label)}: ${count}"></span>`).join('')}</div><div class="behavior-legend">${classifications.map(([label, count, color]) => `<span><i class="${color}"></i>${escapeHtml(label)} <strong>${count}</strong></span>`).join('')}</div></div>`
+      : '<p class="statistics-note">Aún no hay pagos finalizados con fecha registrada para graficar. El análisis se actualizará al registrar pagos y recordatorios.</p>';
+    const clientRows = clients.length
+      ? clients.map((client) => {
+        const probability = client.probabilidad_a_tiempo;
+        const historyCount = Number(client.facturas_pagadas_con_fecha);
+        const probabilityDisplay = probability === null ? 'Sin historial' : `${statisticsNumber(probability)}%`;
+        const badgeClass = client.clasificacion === 'Probable pago a tiempo' ? 'on-time'
+          : client.clasificacion === 'Requiere seguimiento' ? 'late' : 'reminded';
+        return `<tr><td><div class="invoice-customer"><strong>${escapeHtml(client.nombre_razon_social)}</strong><small>${escapeHtml(client.cedula_rif)}</small></div></td><td><div class="probability-cell"><strong>${probabilityDisplay}</strong>${probability !== null ? `<span class="probability-track"><i style="width:${Math.max(0, Math.min(100, probability))}%"></i></span>` : ''}</div></td><td>${historyCount ? `${client.pagadas_antes_vencimiento} de ${historyCount} a tiempo` : 'Sin pagos con fecha'}</td><td>${client.pagadas_despues_recordatorio}</td><td>${client.pendientes_vencidas}</td><td><span class="behavior-badge ${badgeClass}">${escapeHtml(client.clasificacion)}</span></td></tr>`;
+      }).join('')
+      : '<tr><td colspan="6"><div class="empty-state"><strong>No hay clientes activos</strong></div></td></tr>';
+    const invoiceRows = openInvoices.length
+      ? openInvoices.map((invoice) => `<tr><td class="rif-cell">${escapeHtml(invoice.numero_factura)}</td><td><div class="invoice-customer"><strong>${escapeHtml(invoice.nombre_razon_social)}</strong><small>${escapeHtml(invoice.cedula_rif)}</small></div></td><td>${formatDate(invoice.fecha_vencimiento)}</td><td class="money-cell">${formatMoney(invoice.saldo_pendiente)}</td><td>${invoice.cantidad_recordatorios ? `${invoice.cantidad_recordatorios} llamada(s)` : 'Sin llamada'}</td><td><div class="invoice-actions"><button class="button button-secondary reminder-button" type="button" data-payment-reminder="${escapeHtml(invoice.factura_id)}" ${state.recordingReminder === String(invoice.factura_id) ? 'disabled' : ''}>${state.recordingReminder === String(invoice.factura_id) ? 'Registrando...' : 'Registrar llamada'}</button><button class="button button-primary reminder-button" type="button" data-register-payment="${escapeHtml(invoice.factura_id)}" ${state.payingInvoice === String(invoice.factura_id) ? 'disabled' : ''}>${state.payingInvoice === String(invoice.factura_id) ? 'Registrando...' : 'Registrar pago'}</button></div></td></tr>`).join('')
+      : '<tr><td colspan="6"><div class="empty-state"><strong>No hay facturas pendientes</strong><small>Las nuevas facturas aparecerán aquí.</small></div></td></tr>';
+    const error = state.statisticsError
+      ? `<div class="alert" role="alert"><span class="alert-symbol">!</span><span>${escapeHtml(state.statisticsError)}</span><button class="alert-close" type="button" data-retry-statistics>Reintentar</button></div>`
+      : '';
+    pageContent.innerHTML = `
+      ${pageHeading('COMPORTAMIENTO DE PAGO', 'Estadística', 'Analiza el historial de pago por cliente y prioriza llamadas de seguimiento.', '<button class="button button-secondary" type="button" data-refresh-statistics>↻ Actualizar</button>')}
+      ${error}
+      ${state.statisticsLoading && !data ? '<section class="table-card"><div class="loading-state"><span class="spinner"></span>Cargando datos de facturas y pagos...</div></section>' : ''}
+      ${data && !state.statisticsLoading ? `
+        <section class="metrics" aria-label="Indicadores de comportamiento de pago">
+          ${metric('Probabilidad global a tiempo', summary.probabilidad_global_a_tiempo === null ? 'Sin historial' : `${statisticsNumber(summary.probabilidad_global_a_tiempo)}%`, '↗', 'green', `${summary.facturas_pagadas_con_fecha} facturas pagadas con fecha registrada`)}
+          ${metric('Pagos después de llamada', summary.pagadas_despues_recordatorio, '☎', 'amber', 'Pagados luego de registrar recordatorio')}
+          ${metric('Facturas vencidas', summary.pendientes_vencidas, '!', 'red', `De ${summary.pendientes_total} facturas pendientes`)}
+          ${metric('Llamadas registradas', summary.recordatorios_pendientes, '☎', 'blue', 'En facturas que aún tienen saldo')}
+        </section>
+        <section class="statistics-result-card"><h2>Cómo se comportan los pagos</h2><p class="statistics-note">Conteo de facturas pagadas según su historial y las llamadas registradas.</p>${historyChart}<p class="statistics-caution">La probabilidad por cliente es su frecuencia histórica de pagos dentro del vencimiento; no garantiza el comportamiento futuro. Las facturas pagadas antiguas sin fecha de abono se muestran aparte y no se usan en el cálculo.</p></section>
+        <section class="table-card"><div class="table-heading"><div><h2>Probabilidad e historial por cliente</h2><p>El cálculo usa pagos completos con fecha y muestra cuántos respaldan cada estimación.</p></div><span class="record-count">${clients.length} clientes</span></div><div class="table-wrap"><table><thead><tr><th>CLIENTE</th><th>PROB. A TIEMPO</th><th>HISTORIAL PUNTUAL</th><th>DESPUÉS DE LLAMADA</th><th>VENCIDAS</th><th>CLASIFICACIÓN</th></tr></thead><tbody>${clientRows}</tbody></table></div><p class="statistics-caution">Para una clasificación por probabilidad se requieren al menos 2 pagos con fecha: 80% o más = probable pago a tiempo; 50% a 79,9% = seguimiento preventivo; menos de 50% = requiere seguimiento. Cualquier factura vencida también requiere seguimiento, aunque el historial sea insuficiente.</p></section>
+        <section class="table-card"><div class="table-heading"><div><h2>Facturas que requieren seguimiento</h2><p>Registra llamadas y pagos para actualizar el historial real.</p></div><span class="record-count">${openInvoices.length} facturas</span></div><div class="table-wrap"><table><thead><tr><th>FACTURA</th><th>CLIENTE</th><th>VENCIMIENTO</th><th>SALDO</th><th>RECORDATORIOS</th><th>ACCIONES</th></tr></thead><tbody>${invoiceRows}</tbody></table></div></section>
+        <details class="statistics-manual"><summary>Análisis estadístico manual</summary>${renderManualStatistics()}</details>` : ''}
+    `;
+  }
+
+  function statisticsNumber(value) {
+    return new Intl.NumberFormat('es-VE', { maximumFractionDigits: 1 }).format(Number(value));
+  }
+
+  async function loadPaymentBehavior() {
+    state.statisticsLoading = true;
+    state.statisticsError = '';
+    if (state.view === 'estadistica') renderStatistics();
+    try {
+      state.paymentBehavior = (await apiRequest('/estadisticas/pagos')).data;
+    } catch (error) {
+      state.statisticsError = error.message;
+    } finally {
+      state.statisticsLoading = false;
+      if (state.view === 'estadistica') renderStatistics();
+    }
+  }
+
+  async function registerPaymentReminder(invoiceId) {
+    const invoice = state.paymentBehavior?.clients
+      .flatMap((client) => client.facturas_pendientes)
+      .find((item) => String(item.factura_id) === String(invoiceId));
+    if (!invoice || !window.confirm(`¿Registrar que se llamó al cliente por la factura ${invoice.numero_factura}?`)) return;
+    state.recordingReminder = String(invoiceId);
+    renderStatistics();
+    try {
+      const response = await apiRequest(`/cuentas-por-cobrar/${encodeURIComponent(invoiceId)}/recordatorios`, {
+        method: 'POST',
+      });
+      showToast(response.message || 'Llamada registrada.');
+      await loadPaymentBehavior();
+    } catch (error) {
+      state.statisticsError = error.message;
+    } finally {
+      state.recordingReminder = null;
+      if (state.view === 'estadistica') renderStatistics();
+    }
+  }
+
+  function openBehaviorPayment(invoiceId) {
+    const invoice = state.paymentBehavior?.clients
+      .flatMap((client) => client.facturas_pendientes)
+      .find((item) => String(item.factura_id) === String(invoiceId));
+    if (!invoice) return;
+    paymentForm.reset();
+    paymentForm.elements.namedItem('monto').max = Number(invoice.saldo_pendiente).toFixed(2);
+    paymentForm.elements.namedItem('monto').value = Number(invoice.saldo_pendiente).toFixed(2);
+    document.querySelector('#payment-invoice-summary').textContent =
+      `${invoice.numero_factura} · Saldo: ${formatMoney(invoice.saldo_pendiente)}`;
+    document.querySelector('#payment-form-error').textContent = '';
+    paymentForm.dataset.invoiceId = invoice.factura_id;
+    paymentDialog.showModal();
+    paymentForm.elements.namedItem('monto').focus();
+  }
+
+  async function submitBehaviorPayment(event) {
+    event.preventDefault();
+    const invoiceId = paymentForm.dataset.invoiceId;
+    if (state.payingInvoice) return;
+    const invoice = state.paymentBehavior?.clients
+      .flatMap((client) => client.facturas_pendientes)
+      .find((item) => String(item.factura_id) === String(invoiceId));
+    const amount = Number(new FormData(paymentForm).get('monto'));
+    const errorNode = document.querySelector('#payment-form-error');
+    errorNode.textContent = '';
+    if (!invoice || !Number.isFinite(amount) || amount <= 0 || amount > Number(invoice.saldo_pendiente)) {
+      errorNode.textContent = 'Ingresa un abono mayor que cero y no superior al saldo pendiente.';
+      return;
+    }
+    state.payingInvoice = String(invoiceId);
+    const submitButton = document.querySelector('#payment-submit');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Registrando...';
+    try {
+      const response = await apiRequest(`/cuentas-por-cobrar/${encodeURIComponent(invoiceId)}/abonos`, {
+        method: 'POST',
+        body: JSON.stringify({ monto: amount }),
+      });
+      paymentDialog.close();
+      showToast(response.message || 'Abono registrado.');
+      await loadPaymentBehavior();
+    } catch (error) {
+      errorNode.textContent = error.message;
+    } finally {
+      state.payingInvoice = null;
+      submitButton.disabled = false;
+      submitButton.textContent = 'Registrar abono';
+      if (state.view === 'estadistica') renderStatistics();
+    }
+  }
+
+  function renderManualStatistics() {
     let results = '';
     let error = '';
     try {
@@ -785,6 +931,21 @@
       if (state.view === 'clientes' && !state.clientResult) loadClients();
       if (state.view === 'precios' && !state.products) loadProducts();
       if (state.view === 'deudas' && !state.receivables) loadReceivables();
+      if (state.view === 'estadistica') loadPaymentBehavior();
+      return;
+    }
+    if (event.target.closest('[data-refresh-statistics]') || event.target.closest('[data-retry-statistics]')) {
+      loadPaymentBehavior();
+      return;
+    }
+    const reminderButton = event.target.closest('[data-payment-reminder]');
+    if (reminderButton) {
+      registerPaymentReminder(reminderButton.dataset.paymentReminder);
+      return;
+    }
+    const paymentButton = event.target.closest('[data-register-payment]');
+    if (paymentButton) {
+      openBehaviorPayment(paymentButton.dataset.registerPayment);
       return;
     }
     if (event.target.closest('[data-statistics-example]')) {
@@ -799,6 +960,10 @@
     }
     if (event.target.closest('[data-close-dialog]')) {
       clientDialog.close();
+      return;
+    }
+    if (event.target.closest('[data-close-payment]')) {
+      paymentDialog.close();
       return;
     }
     const editButton = event.target.closest('[data-edit-client]');
@@ -877,6 +1042,7 @@
     if (event.target.id === 'price-form') submitPrices(event);
   });
   clientForm.addEventListener('submit', submitClient);
+  paymentForm.addEventListener('submit', submitBehaviorPayment);
   clientForm.addEventListener('input', (event) => {
     if (!event.target.name) return;
     const fieldError = clientForm.querySelector(`[data-error-for="${event.target.name}"]`);
@@ -886,6 +1052,9 @@
   });
   clientDialog.addEventListener('click', (event) => {
     if (event.target === clientDialog) clientDialog.close();
+  });
+  paymentDialog.addEventListener('click', (event) => {
+    if (event.target === paymentDialog) paymentDialog.close();
   });
 
   render();

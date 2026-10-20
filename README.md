@@ -14,8 +14,9 @@ Aplicación en español para gestionar clientes, productos, precios y cuentas po
 1. Copia todos los archivos de este proyecto a `C:\xampp\htdocs\valery\` (o clona el repositorio directamente con ese nombre de carpeta). La carpeta debe contener `index.html`, `api\` y `database\`.
 2. Inicia **Apache** y **MySQL** desde el panel de XAMPP.
 3. Abre `http://localhost/phpmyadmin/`, selecciona **Importar** y carga `database/database.sql`. El script crea `valery_portal`, sus tablas y registros iniciales.
-4. Copia `api/.env.example` como `api/.env`. Para la configuración predeterminada de XAMPP (`root`, contraseña vacía), no es necesario cambiarla.
-5. Abre `http://localhost/valery/` y registra una cuenta para ingresar.
+4. Si ya existe una instalación, ejecuta `database/migrations/20261020_recordatorios_pago.sql` sobre la base `valery_portal`.
+5. Copia `api/.env.example` como `api/.env`. Para la configuración predeterminada de XAMPP (`root`, contraseña vacía), no es necesario cambiarla.
+6. Abre `http://localhost/valery/` y registra una cuenta para ingresar.
 
 La API queda disponible en `http://localhost/valery/api/`. Apache dirige esas rutas a `api/index.php` mediante `.htaccess`; no es necesario iniciar otro servidor ni configurar CORS para el uso local.
 
@@ -56,6 +57,7 @@ Proyecto-Tintorero/
 - Consulta del catálogo con filtro de categoría y actualización masiva de precios.
 - Resumen y alertas de cuentas por cobrar.
 - Herramienta de Estadística para calcular medidas descriptivas, crear histogramas y tablas de frecuencia, y analizar correlación de Pearson y regresión lineal con datos propios.
+- Análisis de comportamiento de pago conectado a facturas, vencimientos, abonos y llamadas de recordatorio; la probabilidad se calcula con el historial observado.
 - Respuestas de API en JSON, consultas PDO preparadas y mensajes de error en español.
 
 `index.html` contiene el panel y sus módulos, incluida la herramienta interactiva de Estadística; `dashboard.html` y `crud.html` son accesos alternativos al mismo panel, para evitar mantener dos copias de la interfaz.

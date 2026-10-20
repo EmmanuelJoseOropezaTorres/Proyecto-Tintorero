@@ -82,6 +82,28 @@ function dispatchAuth(PDO $db, string $method, string $path): never
 
 function dispatchApi(PDO $db, string $method, string $path, array $query): never
 {
+    if ($method === 'GET' && $path === '/estadisticas/pagos') {
+        sendJson(200, ['data' => getPaymentBehavior($db)]);
+    }
+
+    if ($method === 'POST' && preg_match('#^/cuentas-por-cobrar/(\d+)/recordatorios$#', $path, $matches)) {
+        $reminder = recordPaymentReminder($db, positiveInteger($matches[1], 'id'));
+        sendJson(201, [
+            'data' => $reminder,
+            'message' => 'Recordatorio telefónico registrado correctamente.',
+        ]);
+    }
+
+    if ($method === 'POST' && preg_match('#^/cuentas-por-cobrar/(\d+)/abonos$#', $path, $matches)) {
+        $payment = recordReceivablePayment($db, positiveInteger($matches[1], 'id'), jsonBody());
+        sendJson(201, [
+            'data' => $payment,
+            'message' => $payment['estatus_pago'] === 'PAGADO'
+                ? 'Abono registrado. La factura quedó pagada.'
+                : 'Abono registrado y saldo actualizado.',
+        ]);
+    }
+
     if ($method === 'GET' && $path === '/clientes') {
         $page = positiveInteger($query['pagina'] ?? 1, 'pagina');
         $pageSize = positiveInteger($query['tamano_pagina'] ?? 10, 'tamano_pagina');

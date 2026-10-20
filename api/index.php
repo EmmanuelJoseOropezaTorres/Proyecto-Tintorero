@@ -6,6 +6,7 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/models/Cliente.php';
 require_once __DIR__ . '/models/Producto.php';
 require_once __DIR__ . '/models/CuentasPorCobrar.php';
+require_once __DIR__ . '/models/Pagos.php';
 require_once __DIR__ . '/controllers/ApiController.php';
 
 set_exception_handler('errorHandler');
