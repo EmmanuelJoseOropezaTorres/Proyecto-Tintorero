@@ -161,6 +161,7 @@ td { height: 59px; padding: 8px 11px; border-top: 1px solid #f0f2f5; color: #596
 .behavior-legend i { width: 9px; height: 9px; border-radius: 3px; }
 .behavior-legend strong { color: #303a4f; }
 .statistics-caution { margin: 15px 0 0; padding: 10px 12px; border-radius: 6px; color: #8c6729; background: #fff8e9; font-size: 10px; line-height: 1.6; }
+.statistics-demo-note { margin: 10px 0 0; padding: 10px 12px; border: 1px solid #f1d6a5; border-radius: 6px; color: #765c2d; background: #fffaf0; font-size: 10px; line-height: 1.6; }
 .payment-modal { width: min(430px, calc(100% - 30px)); }
 .payment-summary { margin-bottom: 15px; padding: 11px; border-radius: 6px; color: #586276; background: #f7f7fb; font-size: 10px; line-height: 1.5; }
 .invoice-actions { display: flex; flex-wrap: wrap; gap: 6px; }
